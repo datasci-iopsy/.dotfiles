@@ -5,8 +5,16 @@ cleanup-sessions.py — Interactive Claude Code session cleanup.
 Usage:
     claude-cleanup                     # interactive, sorted by size (largest first)
     claude-cleanup --sort age          # sorted by age (oldest first)
+    claude-cleanup --sort tokens       # sorted by last context size (largest first)
     claude-cleanup --older-than 30     # only sessions last used > 30 days ago
     claude-cleanup --dry-run           # preview deletions without removing files
+
+Columns:
+    Size     — on-disk file size (full conversation history log)
+    Ctx      — effective input tokens at last assistant turn (cache_read + cache_creation
+               + uncached); approximates how large the context window was most recently.
+               Low Ctx on a large file means the session was compacted — healthy signal.
+    Msgs     — number of user turns
 """
 
 import argparse
@@ -36,11 +44,30 @@ def format_size(bytes_: int) -> str:
     return f"{bytes_}B"
 
 
-def get_title(path: Path) -> str:
-    """Extract custom title or first user message snippet from a session JSONL."""
+def format_tokens(n: int | None) -> str:
+    if n is None:
+        return "?"
+    if n >= 1_000_000:
+        return f"{n / 1_000_000:.1f}M"
+    if n >= 1_000:
+        return f"{n / 1_000:.0f}K"
+    return str(n)
+
+
+def parse_session(path: Path) -> dict:
+    """Single-pass parse of a session JSONL.
+
+    Returns title, user message count, and effective input token count at the
+    last assistant turn (sum of input_tokens + cache_read_input_tokens +
+    cache_creation_input_tokens).
+    """
+    custom_title = None
+    first_user = None
+    user_count = 0
+    last_ctx_tokens = None
+
     try:
         with open(path, errors="replace") as f:
-            first_user = None
             for line in f:
                 line = line.strip()
                 if not line:
@@ -49,28 +76,45 @@ def get_title(path: Path) -> str:
                     obj = json.loads(line)
                 except json.JSONDecodeError:
                     continue
-                if obj.get("type") == "custom-title" and obj.get("customTitle"):
-                    return obj["customTitle"]
-                if first_user is None and obj.get("type") == "user":
-                    content = obj.get("message", {}).get("content", "")
-                    if isinstance(content, list):
-                        for c in content:
-                            if isinstance(c, dict) and c.get("type") == "text":
-                                first_user = c["text"].replace("\n", " ")
-                                break
-                    elif isinstance(content, str):
-                        first_user = content.replace("\n", " ")
-            return first_user or "(no title)"
-    except Exception:
-        return "(unreadable)"
 
+                rec_type = obj.get("type")
 
-def count_user_messages(path: Path) -> int:
-    try:
-        with open(path, errors="replace") as f:
-            return sum(1 for line in f if '"type":"user"' in line)
+                if rec_type == "custom-title":
+                    ct = obj.get("customTitle")
+                    if ct and custom_title is None:
+                        custom_title = ct
+
+                elif rec_type == "user":
+                    user_count += 1
+                    if first_user is None:
+                        content = obj.get("message", {}).get("content", "")
+                        if isinstance(content, list):
+                            for c in content:
+                                if isinstance(c, dict) and c.get("type") == "text":
+                                    first_user = c["text"].replace("\n", " ")
+                                    break
+                        elif isinstance(content, str):
+                            first_user = content.replace("\n", " ")
+
+                elif rec_type == "assistant":
+                    usage = obj.get("message", {}).get("usage")
+                    if usage:
+                        ctx = (
+                            usage.get("input_tokens", 0)
+                            + usage.get("cache_read_input_tokens", 0)
+                            + usage.get("cache_creation_input_tokens", 0)
+                        )
+                        if ctx > 0:
+                            last_ctx_tokens = ctx
+
     except Exception:
-        return 0
+        pass
+
+    return {
+        "title": custom_title or first_user or "(no title)",
+        "msgs": user_count,
+        "last_ctx_tokens": last_ctx_tokens,
+    }
 
 
 def scan_sessions(older_than_days: int | None = None) -> list[dict]:
@@ -98,6 +142,7 @@ def scan_sessions(older_than_days: int | None = None) -> list[dict]:
                 "mtime": mtime,
                 "title": None,
                 "msgs": None,
+                "last_ctx_tokens": None,
             })
 
     return sessions
@@ -132,8 +177,8 @@ def main():
         epilog=__doc__,
     )
     parser.add_argument(
-        "--sort", choices=["size", "age"], default="size",
-        help="Sort by size (largest first) or age (oldest first). Default: size",
+        "--sort", choices=["size", "age", "tokens"], default="size",
+        help="Sort by size (largest first), age (oldest first), or tokens (largest ctx first). Default: size",
     )
     parser.add_argument(
         "--older-than", type=int, metavar="DAYS",
@@ -152,30 +197,34 @@ def main():
         print("\nNo sessions found.")
         return
 
+    print(f"\rParsing {len(sessions)} session(s)...   ", end="", flush=True)
+    for s in sessions:
+        parsed = parse_session(s["file"])
+        s["title"] = parsed["title"]
+        s["msgs"] = parsed["msgs"]
+        s["last_ctx_tokens"] = parsed["last_ctx_tokens"]
+    print("\r" + " " * 40 + "\r", end="", flush=True)
+
     # Sort
     if args.sort == "age":
-        sessions.sort(key=lambda s: s["mtime"])       # oldest first
+        sessions.sort(key=lambda s: s["mtime"])
+    elif args.sort == "tokens":
+        sessions.sort(key=lambda s: s["last_ctx_tokens"] or 0, reverse=True)
     else:
-        sessions.sort(key=lambda s: s["size"], reverse=True)  # largest first
-
-    # Load titles
-    print(f"\rLoading {len(sessions)} session(s)...   ", end="", flush=True)
-    for s in sessions:
-        s["title"] = get_title(s["file"])
-        s["msgs"] = count_user_messages(s["file"])
-    print("\r" + " " * 40 + "\r", end="", flush=True)
+        sessions.sort(key=lambda s: s["size"], reverse=True)
 
     # ── Table ────────────────────────────────────────────────────────────────
     COL_NUM = 4
     COL_PROJ = 28
     COL_SIZE = 7
+    COL_CTX = 7
     COL_DATE = 12
     COL_MSGS = 5
     COL_TITLE = 60
 
     header = (
         f"{'#':<{COL_NUM}}  {'Project':<{COL_PROJ}}  {'Size':>{COL_SIZE}}"
-        f"  {'Last Used':<{COL_DATE}}  {'Msgs':>{COL_MSGS}}  Title"
+        f"  {'Ctx':>{COL_CTX}}  {'Last Used':<{COL_DATE}}  {'Msgs':>{COL_MSGS}}  Title"
     )
     print(header)
     print("-" * len(header))
@@ -185,6 +234,7 @@ def main():
         print(
             f"{i:<{COL_NUM}}  {s['project']:<{COL_PROJ}.{COL_PROJ}}"
             f"  {format_size(s['size']):>{COL_SIZE}}"
+            f"  {format_tokens(s['last_ctx_tokens']):>{COL_CTX}}"
             f"  {date_str:<{COL_DATE}}  {s['msgs']:>{COL_MSGS}}"
             f"  {s['title']:<{COL_TITLE}.{COL_TITLE}}"
         )
