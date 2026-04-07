@@ -81,6 +81,23 @@ After all agents return:
 - **Cap agent depth at 10 tool calls.** If a subtask needs more, it is too broad -- split it or run it inline.
 - **Model down where possible.** Haiku at ~$0.25/MTok vs Sonnet at ~$3/MTok. A gather-and-report agent should never run on Sonnet.
 
+## Planning vs implementation token profiles
+
+Exploration agents are expensive and unbounded. On a large codebase, a single Explore agent can read 30+ files and consume 50k+ tokens because it follows patterns speculatively. Implementation agents are bounded -- they write or edit specific files and cost proportionally less.
+
+**During planning:**
+- Prefer targeted Glob and Grep over Explore agents when you know what you're looking for
+- Use at most 1-2 Explore agents per planning session, with tightly scoped prompts
+- Avoid broad "explore this entire layer" prompts on large codebases because they will read everything
+- Prompt the user for targeted searches BEFORE exploring entire layer to avoid reading everything
+- Sequential exploration is acceptable; the user's wall-clock patience is not the bottleneck
+
+**During implementation:**
+- Parallel agents are justified for genuinely independent file writes/edits (e.g., 3 unrelated models, separate config files)
+- Token cost is predictable and bounded by the files being modified
+
+The "thorough planning = cheaper coding" argument breaks down when planning consumes so much of the session budget that implementation cannot proceed. Prefer a leaner plan that can be refined during implementation over an exhaustive plan that exhausts the session.
+
 ## Integration with domain skills
 
 This skill provides the orchestration layer. Domain skills provide the expertise. When spawning agents for domain work, reference the skill by name so the agent picks it up from its own context -- do not duplicate domain skill logic in the spawn prompt.
