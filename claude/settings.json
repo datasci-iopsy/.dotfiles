@@ -1,61 +1,59 @@
 {
-  "model": "opusplan",
-  "attribution": {
-    "commit": "",
-    "pr": ""
-  },
-  "permissions": {
-    "allowedTools": [
-      "Read",
-      "Write",
-      "Bash(git *)",
-      "Bash(python *)",
-      "Bash(python3 *)"
-    ],
-    "allow": [
-      "Read(/var/folders/*/*/T/coderabbit-instructions-*.txt)",
-      "WebFetch(domain:docs.coderabbit.ai)",
-      "WebSearch",
-      "Bash(ls:*)",
-      "Bash(tree:*)",
-      "Bash(grep:*)",
-      "Bash(find:*)",
-      "Bash(cat:*)",
-      "Bash(head:*)",
-      "Bash(tail:*)",
-      "Bash(wc:*)",
-      "Bash(diff:*)",
-      "Bash(sort:*)",
-      "Bash(uniq:*)",
-      "Bash(cut:*)",
-      "Bash(file:*)",
-      "Bash(which:*)",
-      "Bash(date:*)",
-      "Bash(make:*)",
-      "Bash(gh:*)",
-      "Bash(jq:*)",
-      "Bash(duckdb:*)",
-      "Bash(gcloud config get-value *)",
-      "Bash(gcloud projects describe *)",
-      "Bash(gcloud auth list)"
-    ]
-  },
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "FILE=$(jq -r '.tool_input.file_path // empty'); case \"$FILE\" in *.lock|*.env|*.env.*|*credentials*|*secret*|*.pem|*.key) echo 'BLOCK: Refusing write to sensitive file: '\"$FILE\"; exit 2;; esac; exit 0"
-          }
+    "model": "opusplan",
+    "attribution": {
+        "commit": "",
+        "pr": ""
+    },
+    "permissions": {
+        "allow": [
+            "Read",
+            "Read(/var/folders/*/*/T/coderabbit-instructions-*.txt)",
+            "WebFetch(domain:docs.coderabbit.ai)",
+            "WebSearch",
+            "Bash(git:*)",
+            "Bash(python:*)",
+            "Bash(python3:*)",
+            "Bash(ls:*)",
+            "Bash(tree:*)",
+            "Bash(grep:*)",
+            "Bash(find:*)",
+            "Bash(cat:*)",
+            "Bash(head:*)",
+            "Bash(tail:*)",
+            "Bash(wc:*)",
+            "Bash(diff:*)",
+            "Bash(sort:*)",
+            "Bash(uniq:*)",
+            "Bash(cut:*)",
+            "Bash(file:*)",
+            "Bash(which:*)",
+            "Bash(date:*)",
+            "Bash(make:*)",
+            "Bash(gh:*)",
+            "Bash(jq:*)",
+            "Bash(duckdb:*)",
+            "Bash(rg:*)",
+            "Bash(gcloud config get-value *)",
+            "Bash(gcloud projects describe *)",
+            "Bash(gcloud auth list)"
         ]
-      }
-    ]
-  },
-  "env": {},
-  "statusLine": {
-    "type": "command",
-    "command": "bash /Users/dkgreen-phd/.claude/statusline-command.sh"
-  }
+    },
+    "hooks": {
+        "PreToolUse": [
+            {
+                "matcher": "Write|Edit",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "FILE=$(jq -r '.tool_input.file_path // empty'); case \"$FILE\" in *.lock|*.env|*.env.*|*credentials*|*secret*|*.pem|*.key) echo 'BLOCK: Refusing write to sensitive file: '\"$FILE\"; exit 2;; esac; exit 0"
+                    }
+                ]
+            }
+        ]
+    },
+    "env": {},
+    "statusLine": {
+        "type": "command",
+        "command": "bash /Users/dkgreen-phd/.claude/statusline-command.sh"
+    }
 }

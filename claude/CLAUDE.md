@@ -30,3 +30,15 @@
 - Always create new commits. Never amend unless explicitly asked.
 - Never force-push. Never skip hooks (--no-verify).
 - Stage files by name, not `git add -A` or `git add .`.
+
+## Workflow
+- While in plan mode, if something goes sideways mid-task, stop and re-plan -- don't keep pushing.
+- Use subagents liberally to keep the main context window clean. Offload research, exploration, and parallel analysis to subagents. One task per subagent for focused execution.
+- Never mark a task complete without proving it works. Run tests, check logs, demonstrate correctness.
+- For non-trivial changes, pause and ask: "Is there a more elegant way?" Skip this for simple, obvious fixes.
+- When given a bug report: just fix it. Point at logs, errors, failing tests -- then resolve them. No hand-holding required from the user.
+
+## Core principles
+- **Simplicity first**: Make every change as simple as possible. Minimal code impact.
+- **Find root causes**: No temporary fixes. Senior developer standards.
+- **Minimal impact**: Only touch what's necessary. Avoid introducing bugs.
