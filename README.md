@@ -2,19 +2,46 @@
 
 Personal dotfiles. Managed via symlinks — `install.sh` sets everything up.
 
-## Setup on a new machine
+## Setup on a new machine or profile
+
+### 1. Clone the repo
 
 ```bash
 git clone git@github.com:<your-username>/dotfiles.git ~/.dotfiles
+```
+
+### 2. Clear any pre-existing real files
+
+`install.sh` will skip files that already exist as real files (not symlinks). Remove them first so the symlinks can be created. Back up anything you want to preserve.
+
+```bash
+# Example for Claude config — check install.sh for the full list of targets
+cp ~/.claude/settings.json ~/.claude/settings.json.bak   # optional backup
+rm ~/.claude/settings.json
+```
+
+Repeat for any other files listed in `install.sh` that already exist on the machine.
+
+### 3. Run the installer
+
+```bash
 bash ~/.dotfiles/install.sh
 ```
 
-Then seed Claude memory for each project:
+Each line will print `ok` (already linked), `link` (newly created), or `SKIP` (real file still exists — go back to step 2 for those).
+
+### 4. Seed Claude memory for each project
+
+Memory is stored per project, keyed by the project's absolute path. Run this once from each project root before your first Claude session on this machine:
 
 ```bash
 cd /path/to/project
 bash ~/.dotfiles/claude/seed-memory.sh
 ```
+
+Then edit `~/.claude/projects/<encoded-path>/memory/project_current_phase.md` to reflect the current state of that project.
+
+> Note: seeding is safe to skip for the dotfiles repo itself — you only need it for projects where you'll be doing active Claude-assisted work.
 
 ## Contents
 
