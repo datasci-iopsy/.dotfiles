@@ -54,6 +54,6 @@
     "env": {},
     "statusLine": {
         "type": "command",
-        "command": "bash /Users/dkgreen-phd/.claude/statusline-command.sh"
+        "command": "bash $HOME/.claude/statusline-command.sh"
     }
 }
