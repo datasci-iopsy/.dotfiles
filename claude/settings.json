@@ -33,6 +33,7 @@
             "Bash(jq:*)",
             "Bash(duckdb:*)",
             "Bash(rg:*)",
+            "Bash(textutil:*)",
             "Bash(gcloud config get-value *)",
             "Bash(gcloud projects describe *)",
             "Bash(gcloud auth list)"
