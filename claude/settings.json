@@ -1,79 +1,82 @@
 {
-    "model": "opusplan",
-    "attribution": {
-        "commit": "",
-        "pr": ""
-    },
-    "permissions": {
-        "allow": [
-            "Read",
-            "Read(/var/folders/*/*/T/coderabbit-instructions-*.txt)",
-            "WebFetch(domain:docs.coderabbit.ai)",
-            "WebSearch",
-            "Bash(git:*)",
-            "Bash(python:*)",
-            "Bash(python3:*)",
-            "Bash(ls:*)",
-            "Bash(tree:*)",
-            "Bash(grep:*)",
-            "Bash(find:*)",
-            "Bash(cat:*)",
-            "Bash(head:*)",
-            "Bash(tail:*)",
-            "Bash(wc:*)",
-            "Bash(diff:*)",
-            "Bash(sort:*)",
-            "Bash(uniq:*)",
-            "Bash(cut:*)",
-            "Bash(file:*)",
-            "Bash(which:*)",
-            "Bash(date:*)",
-            "Bash(make:*)",
-            "Bash(gh:*)",
-            "Bash(jq:*)",
-            "Bash(duckdb:*)",
-            "Bash(rg:*)",
-            "Bash(textutil:*)",
-            "Bash(gcloud config get-value *)",
-            "Bash(gcloud projects describe *)",
-            "Bash(gcloud auth list)",
-            "Bash(graphify:*)"
+  "model": "opusplan",
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "permissions": {
+    "defaultMode": "default",
+    "allow": [
+      "Read",
+      "Read(/var/folders/*/*/T/coderabbit-instructions-*.txt)",
+      "WebFetch(domain:docs.coderabbit.ai)",
+      "WebSearch",
+      "Bash(git:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(ls:*)",
+      "Bash(tree:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(diff:*)",
+      "Bash(sort:*)",
+      "Bash(uniq:*)",
+      "Bash(cut:*)",
+      "Bash(file:*)",
+      "Bash(which:*)",
+      "Bash(date:*)",
+      "Bash(make:*)",
+      "Bash(gh:*)",
+      "Bash(jq:*)",
+      "Bash(duckdb:*)",
+      "Bash(rg:*)",
+      "Bash(textutil:*)",
+      "Bash(gcloud config get-value *)",
+      "Bash(gcloud projects describe *)",
+      "Bash(gcloud auth list)",
+      "Bash(graphify:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(jq -r '.tool_input.file_path // empty'); case \"$FILE\" in *.lock|*.env|*.env.*|*credentials*|*secret*|*.pem|*.key) echo 'BLOCK: Refusing write to sensitive file: '\"$FILE\"; exit 2;; esac; exit 0"
+          }
         ]
-    },
-    "hooks": {
-        "PreToolUse": [
-            {
-                "matcher": "Write|Edit",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "FILE=$(jq -r '.tool_input.file_path // empty'); case \"$FILE\" in *.lock|*.env|*.env.*|*credentials*|*secret*|*.pem|*.key) echo 'BLOCK: Refusing write to sensitive file: '\"$FILE\"; exit 2;; esac; exit 0"
-                    }
-                ]
-            },
-            {
-                "matcher": "Bash",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "CMD=$(jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE '(python|python3)' && echo \"$CMD\" | grep -qE '(import json|json\\.loads|json\\.dumps)'; then echo 'Prefer jq over Python for JSON parsing -- jq is pre-approved, streaming, and faster for shell tasks.' >&2; exit 1; fi; exit 0"
-                    }
-                ]
-            },
-            {
-                "matcher": "Agent|WebFetch",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "bash $HOME/.claude/cost-guard.sh"
-                    }
-                ]
-            }
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CMD=$(jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE '(python|python3)' && echo \"$CMD\" | grep -qE '(import json|json\\.loads|json\\.dumps)'; then echo 'Prefer jq over Python for JSON parsing -- jq is pre-approved, streaming, and faster for shell tasks.' >&2; exit 1; fi; exit 0"
+          }
         ]
-    },
-    "env": {},
-    "statusLine": {
-        "type": "command",
-        "command": "bash $HOME/.claude/statusline-command.sh"
-    }
+      },
+      {
+        "matcher": "Agent|WebFetch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/cost-guard.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {},
+  "statusLine": {
+    "type": "command",
+    "command": "bash $HOME/.claude/statusline-command.sh"
+  },
+  "effortLevel": "medium",
+  "includeGitInstructions": false
 }
