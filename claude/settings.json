@@ -36,7 +36,8 @@
             "Bash(textutil:*)",
             "Bash(gcloud config get-value *)",
             "Bash(gcloud projects describe *)",
-            "Bash(gcloud auth list)"
+            "Bash(gcloud auth list)",
+            "Bash(graphify:*)"
         ]
     },
     "hooks": {

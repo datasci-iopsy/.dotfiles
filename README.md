@@ -66,7 +66,7 @@ Custom skills live in `claude/skills/`. Each skill is a directory containing a `
 
 See [`claude/skills/README.md`](claude/skills/README.md) for the full skill reference, trigger conditions, and instructions for adding new skills.
 
-Current skills: `anaiis-agents`, `anaiis-duckdb`, `anaiis-litreview`, `anaiis-peerreview`, `anaiis-preflight`, `anaiis-changelog`, `anaiis-docaudit`
+Current skills: `anaiis-agents`, `anaiis-duckdb`, `anaiis-litreview`, `anaiis-peerreview`, `anaiis-preflight`, `anaiis-changelog`, `anaiis-docaudit`, `graphify`
 
 ---
 
@@ -159,6 +159,27 @@ Claude maintains persistent memory files per project at `~/.claude/projects/<enc
 - **Manual:** Update `project_current_phase.md` yourself when milestones shift.
 
 Memory, session history, and compaction are independent. Compaction summarizes the current session for continuity within that session only. Memory persists across sessions. Session history persists on disk until deleted via `claude-cleanup`.
+
+---
+
+## Per-machine setup (Python CLI tools)
+
+`install.sh` handles symlinks only. Python-based CLI tools must be installed per machine because they carry native compiled dependencies. Run these once after cloning and running `install.sh`.
+
+**Prerequisites:** `pyenv` with Python 3.12.12 installed (`pyenv install 3.12.12`).
+
+```bash
+# Bootstrap pipx under the tools Python (3.12.12 is the designated tools version)
+~/.pyenv/versions/3.12.12/bin/python -m pip install pipx
+
+# graphify -- codebase knowledge graph generator (https://github.com/safishamsi/graphify)
+~/.pyenv/versions/3.12.12/bin/python -m pipx install graphifyy \
+  --python ~/.pyenv/versions/3.12.12/bin/python
+```
+
+The `graphify` binary lands in `~/.local/bin/graphify`, which is already on PATH. The skill file is tracked in the dotfiles repo and registered automatically via the `skills/` symlink. No `graphify install` needed.
+
+> Use `~/.pyenv/versions/3.12.12/bin/python -m pipx install <pkg>` for any future Python CLI tools. This pins each tool to 3.12.12 and keeps them isolated from project virtualenvs (like dbt's 3.12.4).
 
 ---
 
