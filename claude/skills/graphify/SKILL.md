@@ -45,6 +45,10 @@ Three things it does that Claude alone cannot:
 2. **Honest audit trail** - every edge is tagged EXTRACTED, INFERRED, or AMBIGUOUS. You know what was found vs invented.
 3. **Cross-document surprise** - community detection finds connections between concepts in different files that you would never think to ask about directly.
 
+**Supported file types (parsed by tree-sitter AST):** Python, JavaScript, TypeScript, Go, Rust, Java, C, C++, Ruby, C#, Kotlin, Scala, PHP. Plus: Markdown, plain text, PDFs, and images (via Claude vision).
+
+**Not supported:** SQL, YAML, JSON, shell scripts, and other file types not listed above. graphify's detect step will silently skip these. If the target directory is primarily SQL (e.g. a dbt project), stop and tell the user: "graphify does not parse SQL. For dbt model dependencies, use the dbt manifest.json instead."
+
 Use it for:
 - A codebase you're new to (understand architecture before touching anything)
 - A reading list (papers + tweets + notes → one navigable graph)
@@ -99,7 +103,7 @@ Corpus: X files · ~Y words
 ```
 
 Then act on it:
-- If `total_files` is 0: stop with "No supported files found in [path]."
+- If `total_files` is 0 OR code files are 0 and docs/papers/images are also 0: stop immediately with "No supported files found in [path]. Note: SQL, YAML, JSON, and shell files are not parsed by graphify. If this is a dbt or SQL-heavy project, use the dbt manifest.json for dependency mapping instead."
 - If `skipped_sensitive` is non-empty: mention file count skipped, not the file names.
 - If `total_words` > 2,000,000 OR `total_files` > 200: show the warning and the top 5 subdirectories by file count, then ask which subfolder to run on. Wait for the user's answer before proceeding.
 - Otherwise: proceed directly to Step 3 - no need to ask anything.
