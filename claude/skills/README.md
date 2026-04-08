@@ -1,0 +1,103 @@
+# Skills
+
+Custom Claude Code skills for this dotfiles setup. Each skill is a directory containing a `SKILL.md` file. Claude reads the `description` frontmatter field to decide when to activate a skill automatically -- no explicit invocation needed for auto-trigger skills.
+
+All skills use the `anaiis-` namespace prefix.
+
+---
+
+## Skills reference
+
+### `anaiis-agents`
+
+**Trigger:** Comparative analyses (A vs B), multi-source research, codebase exploration across 3+ unrelated modules, independent subtasks with no data dependencies, or any explicit parallelism request.
+
+**What it does:** Orchestrates parallel subagents to minimize wall-clock time on decomposable tasks. Encodes a decision framework for when to parallelize vs run inline, model selection per agent (haiku for gather/report, sonnet for analysis, opus for synthesis), spawn protocol, synthesis protocol, and cost guardrails.
+
+**Key rules:**
+- Max 5 parallel agents per request
+- Skip parallelism for tasks under 4 sequential tool calls
+- During planning: prefer targeted Glob/Grep over Explore agents on large codebases
+- During implementation: parallel agents are fine for independent file writes
+
+---
+
+### `anaiis-duckdb`
+
+**Trigger:** Analyzing, querying, or exploring local parquet, CSV, Excel, JSON, Avro, or SQLite files; schema inspection; joins and aggregations across structured data.
+
+**What it does:** Runs ad hoc SQL analytics using the DuckDB CLI. Covers the full workflow from file size check through schema introspection, query patterns (one-shot, glob, heredoc batching), and export.
+
+**Key rules:**
+- DuckDB is the default engine regardless of file size (~50MB crossover with Python is informational, not a hard rule)
+- Prefer heredoc multi-statement blocks over multiple `-c` calls to minimize LLM round-trips
+- Never load multi-GB files into pandas; DuckDB handles streaming natively
+- Python only for plotting, ML pipelines, or complex control flow
+
+**Supported formats:** parquet, CSV, JSON (`read_json_auto`), Excel (via spatial extension), Avro, SQLite (via ATTACH), remote files (httpfs)
+
+---
+
+### `anaiis-litreview`
+
+**Trigger:** Literature review or research synthesis tasks that reference the local references catalog.
+
+**What it does:** Queries a pre-built parquet catalog at `~/Documents/icloud-docs/prof-edu/references/references_catalog.parquet` using DuckDB, narrows candidates by abstract review, does full-text search with ripgrep, deep-reads up to 5 PDFs per pass, and synthesizes findings thematically.
+
+**Dependency:** Requires the parquet catalog to exist at the expected path.
+
+---
+
+### `anaiis-preflight`
+
+**Trigger:** Environment health check requests, or before starting work in an unfamiliar or potentially broken environment.
+
+**What it does:** Non-destructive environment check covering Python/R/Git/auth state. Always run inline -- do not waste an agent on it.
+
+---
+
+### `anaiis-changelog`
+
+**Trigger:** Generating a changelog or release notes from a branch diff.
+
+**What it does:** Produces a PR-ready changelog by analyzing the git diff between the current branch and its base. Groups changes by type (features, fixes, refactors, etc.).
+
+---
+
+### `anaiis-docaudit`
+
+**Trigger:** Documentation accuracy audit requests -- verifying that docs, comments, or schema descriptions match the current state of the code.
+
+**What it does:** Reads the current codebase state and cross-checks it against documentation, flagging stale descriptions, incorrect field names, and missing entries.
+
+---
+
+## How skills work
+
+Skills are Markdown files with YAML frontmatter loaded by Claude Code from `~/.claude/skills/`. The `description` field is the primary trigger signal -- Claude matches it against the current task to decide whether to activate the skill.
+
+```markdown
+---
+name: skill-name
+description: One-line description used by Claude to decide when to activate
+---
+
+# Skill Title
+
+...instructions...
+```
+
+Skills are loaded into every session via the `~/.claude/skills/` symlink (which points to this directory). They are available globally, not per-project.
+
+---
+
+## Adding a new skill
+
+1. Create a directory: `claude/skills/<name>/`
+2. Create `SKILL.md` with frontmatter (`name`, `description`) and the skill body
+3. The skill is immediately available via the existing symlink -- no installer change needed
+4. Commit and push
+
+**Naming:** Use the `anaiis-` prefix to namespace skills from this repo and avoid collisions with marketplace or external skills.
+
+**Description field:** Write it to match the natural language a user would use when requesting the task. This is what Claude pattern-matches against. Be specific enough to avoid false triggers.

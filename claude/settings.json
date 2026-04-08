@@ -48,6 +48,15 @@
                         "command": "FILE=$(jq -r '.tool_input.file_path // empty'); case \"$FILE\" in *.lock|*.env|*.env.*|*credentials*|*secret*|*.pem|*.key) echo 'BLOCK: Refusing write to sensitive file: '\"$FILE\"; exit 2;; esac; exit 0"
                     }
                 ]
+            },
+            {
+                "matcher": "Bash",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "CMD=$(jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE '(python|python3)' && echo \"$CMD\" | grep -qE '(import json|json\\.loads|json\\.dumps)'; then echo 'Prefer jq over Python for JSON parsing -- jq is pre-approved, streaming, and faster for shell tasks.' >&2; exit 1; fi; exit 0"
+                    }
+                ]
             }
         ]
     },
