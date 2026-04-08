@@ -59,6 +59,15 @@
                         "command": "CMD=$(jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE '(python|python3)' && echo \"$CMD\" | grep -qE '(import json|json\\.loads|json\\.dumps)'; then echo 'Prefer jq over Python for JSON parsing -- jq is pre-approved, streaming, and faster for shell tasks.' >&2; exit 1; fi; exit 0"
                     }
                 ]
+            },
+            {
+                "matcher": "Agent|WebFetch",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash $HOME/.claude/cost-guard.sh"
+                    }
+                ]
             }
         ]
     },

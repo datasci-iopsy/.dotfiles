@@ -27,6 +27,7 @@ symlink "$DOTFILES/claude/statusline-command.sh"  "$HOME/.claude/statusline-comm
 symlink "$DOTFILES/claude/keybindings.json"       "$HOME/.claude/keybindings.json"
 symlink "$DOTFILES/claude/skills"               "$HOME/.claude/skills"
 symlink "$DOTFILES/claude/cleanup-sessions.py"  "$HOME/.local/bin/claude-cleanup"
+symlink "$DOTFILES/claude/cost-guard.sh"        "$HOME/.claude/cost-guard.sh"
 
 echo ""
 echo "Done. Run seed-memory.sh to initialize Claude memory files for a project."
