@@ -105,6 +105,7 @@ Corpus: X files · ~Y words
 Then act on it:
 - If `total_files` is 0 OR code files are 0 and docs/papers/images are also 0: stop immediately with "No supported files found in [path]. Note: SQL, YAML, JSON, and shell files are not parsed by graphify. If this is a dbt or SQL-heavy project, use the dbt manifest.json for dependency mapping instead."
 - If `skipped_sensitive` is non-empty: mention file count skipped, not the file names.
+- If `total_words` < 150,000 AND `total_files` < 150: stop immediately. Tell the user: "This corpus (~[total_words] words, [total_files] files) fits in a single context window — building a graph costs more tokens than it saves. Use the Explore agent or Read tool directly instead. Graphify pays off for corpora that don't fit in context (150+ files or 150k+ words)." Do not proceed.
 - If `total_words` > 2,000,000 OR `total_files` > 200: show the warning and the top 5 subdirectories by file count, then ask which subfolder to run on. Wait for the user's answer before proceeding.
 - Otherwise: proceed directly to Step 3 - no need to ask anything.
 
