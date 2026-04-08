@@ -2,7 +2,7 @@
 
 Custom Claude Code skills for this dotfiles setup. Each skill is a directory containing a `SKILL.md` file. Claude reads the `description` frontmatter field to decide when to activate a skill automatically -- no explicit invocation needed for auto-trigger skills.
 
-All skills use the `anaiis-` namespace prefix.
+Custom skills use the `anaiis-` namespace prefix to avoid collisions. Externally-sourced skills (e.g. `graphify`) retain their upstream name.
 
 ---
 
@@ -82,6 +82,24 @@ All skills use the `anaiis-` namespace prefix.
 
 ---
 
+### `graphify`
+
+**Trigger:** `/graphify` slash command (explicit invocation only -- not auto-triggered).
+
+**What it does:** Builds a persistent knowledge graph from a codebase or document corpus. Outputs interactive HTML visualization, GraphRAG-ready `graph.json` (queryable across sessions), and a `GRAPH_REPORT.md` audit trail. Each relationship is tagged EXTRACTED, INFERRED, or AMBIGUOUS.
+
+**Installation:** CLI installed via pipx pinned to Python 3.12.12. See the per-machine setup section in the root README. The skill file is tracked here; the binary lives at `~/.local/bin/graphify`.
+
+**Supported file types:** Python, JS, TS, Go, Rust, Java, C/C++, Ruby, C#, Kotlin, Scala, PHP (via tree-sitter AST), plus Markdown, plain text, PDFs, and images.
+
+**Key rules and guardrails:**
+- SQL is not supported -- no tree-sitter SQL binding. Do not use on dbt or SQL-heavy projects; graphify will silently skip all `.sql` files and return zero code nodes. For dbt model dependencies, use `target/manifest.json` instead.
+- Hard stop for small corpora: if the target is under 150 files or 150k words, the skill stops and directs to Explore/Read instead. Building a graph on a corpus that fits in context costs more tokens than it saves.
+- Before dispatching semantic extraction subagents (Step 3), the skill shows a token cost estimate and asks for explicit confirmation. General-purpose agent spawns also trigger the global `cost-guard.sh` hook.
+- Outputs land in `graphify-out/` relative to the target directory. The `graph.json` is persistent and can be queried in future sessions without re-running the full pipeline.
+
+---
+
 ### `anaiis-docaudit`
 
 **Trigger:** Documentation accuracy audit requests -- verifying that docs, comments, or schema descriptions match the current state of the code.
@@ -116,6 +134,6 @@ Skills are loaded into every session via the `~/.claude/skills/` symlink (which 
 3. The skill is immediately available via the existing symlink -- no installer change needed
 4. Commit and push
 
-**Naming:** Use the `anaiis-` prefix to namespace skills from this repo and avoid collisions with marketplace or external skills.
+**Naming:** Use the `anaiis-` prefix for custom skills to namespace them from marketplace or external skills. Externally-sourced skills (installed from a third-party package) retain their upstream name.
 
 **Description field:** Write it to match the natural language a user would use when requesting the task. This is what Claude pattern-matches against. Be specific enough to avoid false triggers.
