@@ -28,6 +28,12 @@ symlink "$DOTFILES/claude/keybindings.json"       "$HOME/.claude/keybindings.jso
 symlink "$DOTFILES/claude/skills"               "$HOME/.claude/skills"
 symlink "$DOTFILES/claude/cleanup-sessions.py"  "$HOME/.local/bin/claude-cleanup"
 symlink "$DOTFILES/claude/cost-guard.sh"        "$HOME/.claude/cost-guard.sh"
+symlink "$DOTFILES/claude/post-edit-lint.sh"    "$HOME/.claude/post-edit-lint.sh"
+symlink "$DOTFILES/claude/r-lint-staged.sh"     "$HOME/.claude/r-lint-staged.sh"
+symlink "$DOTFILES/claude/install-repo-hooks.sh" "$HOME/.claude/install-repo-hooks.sh"
+
+echo "=== R Style ==="
+symlink "$DOTFILES/.lintr"                      "$HOME/.lintr"
 
 echo ""
 echo "Done. Run seed-memory.sh to initialize Claude memory files for a project."

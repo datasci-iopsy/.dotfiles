@@ -24,6 +24,15 @@
 - Use Glob and Grep to narrow before Read. Do not read entire files speculatively.
 - Chain independent read-only shell commands with && in a single Bash call.
 - Be direct. Skip preamble ("Great question!", "Sure, I can help with that").
+- Prefer the Read tool over Bash(cat) for reading files. Use cat only when piping output to another command (e.g., cat file | jq).
+- Never use head or tail via Bash; use Read with offset/limit instead.
+
+## Environment safety
+- Before modifying Python venvs or dependencies, identify all venvs in the project and confirm which is active. Never modify venv contents without mapping the environment first.
+- When working in projects with worktrees, confirm which worktree/directory you're in before running commands.
+
+## Output preferences
+- When generating long-form content (proposals, reviews, reports), write output to a file rather than printing to terminal.
 
 ## Git workflow
 - Task branches: `<base>--claude-<topic>` naming convention.

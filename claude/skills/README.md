@@ -52,7 +52,7 @@ Custom skills use the `anaiis-` namespace prefix to avoid collisions. Externally
 
 **Trigger:** Environment health check requests, or before starting work in an unfamiliar or potentially broken environment.
 
-**What it does:** Non-destructive environment check covering Python/R/Git/auth state. Always run inline -- do not waste an agent on it.
+**What it does:** Non-destructive environment check covering Python/R/Git/auth state, and whether the repo's pre-commit hook includes R lint enforcement. If R files exist but the hook is missing, it flags the gap and provides the fix command. Always run inline -- do not waste an agent on it.
 
 ---
 
@@ -97,6 +97,23 @@ Custom skills use the `anaiis-` namespace prefix to avoid collisions. Externally
 - Hard stop for small corpora: if the target is under 150 files or 150k words, the skill stops and directs to Explore/Read instead. Building a graph on a corpus that fits in context costs more tokens than it saves.
 - Before dispatching semantic extraction subagents (Step 3), the skill shows a token cost estimate and asks for explicit confirmation. General-purpose agent spawns also trigger the global `cost-guard.sh` hook.
 - Outputs land in `graphify-out/` relative to the target directory. The `graph.json` is persistent and can be queried in future sessions without re-running the full pipeline.
+
+---
+
+### `anaiis-copyedit`
+
+**Trigger:** The user asks to edit, copyedit, proofread, or polish a manuscript, paper, dissertation chapter, or proposal they have written.
+
+**What it does:** Combines line editing, copyediting, and proofreading into a four-pass workflow grounded in a three-level judgment framework: fix silently (undisputed mechanical errors), query the author (ambiguous meaning or apparent errors), and leave alone (deliberate authorial choices and discipline conventions). For `.md`/`.tex` files, applies silent fixes directly via the Edit tool (unstaged) and produces a companion copyedit report and style sheet. For `.pdf`/`.docx`, produces a report only. APA 7th is the style standard.
+
+**Key rules:**
+- Conservative line editing: only intervene on genuinely unclear or awkward prose; preserve author voice
+- Never alter meaning without an AU query; never rewrite paragraphs wholesale
+- Never evaluate argument quality or research design (that is the reviewer's role -- see anaiis-peerreview)
+- Style sheet written to a separate `<manuscript-name>-stylesheet.md` for multi-round editing continuity
+- Reads PDFs in ≤15-page chunks via the Read tool's `pages` parameter
+
+**Boundary with anaiis-peerreview:** The peer reviewer evaluates whether the work is worth publishing. The copyeditor ensures what the author intends to say is said clearly, consistently, and correctly. Both use APA 7th; neither overlaps in scope.
 
 ---
 

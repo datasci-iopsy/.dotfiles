@@ -43,19 +43,36 @@ Then edit `~/.claude/projects/<encoded-path>/memory/project_current_phase.md` to
 
 > Seeding is not needed for the dotfiles repo itself -- only for projects where you do active Claude-assisted work.
 
+### 5. Install repo hooks for each project
+
+Each project needs its pre-commit hook wired up. Run this once from each project root:
+
+```bash
+cd /path/to/project
+bash ~/.claude/install-repo-hooks.sh
+```
+
+This adds R lint enforcement to the pre-commit hook. Safe to re-run -- skips if already in place. See the [R Style Enforcement](#r-style-enforcement) section for the full picture.
+
 ---
 
 ## What gets installed
 
 ```
 claude/
-  settings.json         → ~/.claude/settings.json          Global permissions, hooks, model, status line
-  CLAUDE.md             → ~/.claude/CLAUDE.md              Global instructions loaded in every session
-  keybindings.json      → ~/.claude/keybindings.json       Custom key bindings
-  statusline-command.sh → ~/.claude/statusline-command.sh  Status bar script (see below)
-  skills/               → ~/.claude/skills/                All custom skills (symlinked as a directory)
-  cleanup-sessions.py   → ~/.local/bin/claude-cleanup      Interactive session cleanup CLI
-  seed-memory.sh                                           Per-project memory bootstrapper (not symlinked)
+  settings.json           → ~/.claude/settings.json          Global permissions, hooks, model, status line
+  CLAUDE.md               → ~/.claude/CLAUDE.md              Global instructions loaded in every session
+  keybindings.json        → ~/.claude/keybindings.json       Custom key bindings
+  statusline-command.sh   → ~/.claude/statusline-command.sh  Status bar script
+  cost-guard.sh           → ~/.claude/cost-guard.sh          Agent cost transparency hook
+  post-edit-lint.sh       → ~/.claude/post-edit-lint.sh      PostToolUse lint hook (py/sh/R)
+  r-lint-staged.sh        → ~/.claude/r-lint-staged.sh       Pre-commit R lint for any repo
+  install-repo-hooks.sh   → ~/.claude/install-repo-hooks.sh  One-command hook installer for new repos
+  skills/                 → ~/.claude/skills/                All custom skills (symlinked as a directory)
+  cleanup-sessions.py     → ~/.local/bin/claude-cleanup      Interactive session cleanup CLI
+  seed-memory.sh                                             Per-project memory bootstrapper (not symlinked)
+
+.lintr                    → ~/.lintr                         Global R style config (tidyverse + native pipe)
 ```
 
 ---
@@ -66,25 +83,94 @@ Custom skills live in `claude/skills/`. Each skill is a directory containing a `
 
 See [`claude/skills/README.md`](claude/skills/README.md) for the full skill reference, trigger conditions, and instructions for adding new skills.
 
-Current skills: `anaiis-agents`, `anaiis-duckdb`, `anaiis-litreview`, `anaiis-peerreview`, `anaiis-preflight`, `anaiis-changelog`, `anaiis-docaudit`, `graphify`
+Current skills: `anaiis-agents`, `anaiis-changelog`, `anaiis-copyedit`, `anaiis-docaudit`, `anaiis-duckdb`, `anaiis-litreview`, `anaiis-peerreview`, `anaiis-preflight`, `graphify`
 
 ---
 
 ## Hooks
 
-Hooks are configured in `claude/settings.json` under the `hooks` key. They run shell commands at specific points in Claude's lifecycle -- before tool execution, after writes, etc.
+Hooks are configured in `claude/settings.json` under the `hooks` key. They run shell commands at specific points in Claude's lifecycle.
 
 ### Active hooks
 
+**PostToolUse: Edit|Write -- lint on save (`post-edit-lint.sh`)**
+Runs after every file edit or write. Lints by file type:
+- `.py` -- `ruff check` (first 5 findings)
+- `.sh` -- `shellcheck --severity=warning` (first 5 findings)
+- `.R` / `.r` -- `lintr::lint()` using `~/.lintr` config (first 10 findings)
+
+Always exits 0 -- informational only, never blocks Claude. Uses `--no-init-file` for R to bypass `renv`'s `.Rprofile` and use the global lintr installation.
+
 **PreToolUse: Write|Edit -- sensitive file guard**
-Blocks writes to files matching `*.lock`, `*.env`, `*credentials*`, `*secret*`, `*.pem`, `*.key`. Hard block (exit 2).
+Hard-blocks (exit 2) writes to files matching `*.lock`, `*.env`, `*credentials*`, `*secret*`, `*.pem`, `*.key`.
 
 **PreToolUse: Bash -- jq over Python warning**
-Fires when a Bash command contains `python`/`python3` AND `import json`, `json.loads`, or `json.dumps`. Emits a warning recommending `jq` instead. Soft warning (exit 1) -- not a hard block, since complex Python+JSON transforms are legitimate.
+Fires when a Bash command contains Python JSON parsing (`import json`, `json.loads`, `json.dumps`). Emits a soft warning (exit 1) recommending `jq` instead.
+
+**PreToolUse: Agent|WebFetch -- cost guard (`cost-guard.sh`)**
+Shows estimated token cost before agent spawns or WebFetch calls. Explore/Plan agents: informational only (exit 0). General-purpose agents: soft gate requiring user confirmation (exit 1) with a cost tier (MEDIUM/HIGH/VERY HIGH) and token range estimate.
 
 ### Adding a hook
 
-Use the `update-config` skill: describe the behavior you want and it will read the existing file, construct and test the command, then merge it in safely. Review the result in `/hooks`.
+Use the `update-config` skill: describe the behavior you want and it will read the existing file, construct and test the command, then merge it in safely.
+
+---
+
+## R Style Enforcement
+
+R files are held to the [tidyverse style guide](https://style.tidyverse.org) using the native `|>` pipe. Enforcement is automatic at every layer -- nothing needs to be in your working memory.
+
+### Enforcement chain
+
+| When | Tool | What it does |
+|------|------|-------------|
+| While typing in VS Code | `languageserver` + `lintr` | Inline squiggly underlines on violations |
+| On save (Cmd+S) | `styler` via `formatOnSave` | Auto-fixes mechanical formatting |
+| Claude edits a `.R`/`.r` file | `post-edit-lint.sh` hook | Reports remaining violations to Claude |
+| `git commit` | `r-lint-staged.sh` pre-commit | Blocks commit, lists all violations |
+| PR open/push | CodeRabbit | Reviews against project CLAUDE.md R conventions |
+
+**styler** fixes: spacing, indentation, brace placement, comma spacing, infix operators.
+**lintr** reports: `=` vs `<-`, camelCase names, `%>%` vs `|>`, `T`/`F`, explicit `return()`, `&`/`|` in conditions.
+
+### Style config (`~/.lintr`)
+
+The global `~/.lintr` config (symlinked from `.dotfiles/.lintr`) applies to every R project on this machine. It encodes 17 rules:
+
+- `object_name_linter("snake_case")` -- snake_case names only
+- `assignment_linter()` -- use `<-`, never `=`
+- `line_length_linter(80L)` -- 80-character max
+- `indentation_linter(2L)` -- 2-space indent
+- `commas_linter()` -- space after commas
+- `infix_spaces_linter()` -- spaces around operators
+- `spaces_inside_linter()` -- no spaces inside `()` or `[]`
+- `brace_linter()` -- `{` at end of line, `}` on its own line
+- `pipe_continuation_linter()` -- `|>` continuation on a new line
+- `pipe_consistency_linter(pipe = "|>")` -- flag `%>%`
+- `quotes_linter()` -- double quotes only
+- `semicolon_linter()` -- no semicolons
+- `trailing_whitespace_linter()` -- no trailing whitespace
+- `vector_logic_linter()` -- `&&`/`||` in `if`, not `&`/`|`
+- `function_return_linter()` -- no unnecessary explicit `return()`
+- `implicit_assignment_linter()` -- no assignment inside function args
+- `T_and_F_symbol_linter()` -- `TRUE`/`FALSE` not `T`/`F`
+
+**Per-project overrides:** add a `.lintr` file in the project root. lintr walks up from the file to find the nearest config. Use `# nolint` inline to suppress individual findings.
+
+### Adding R lint to a new repo
+
+```bash
+cd /path/to/repo
+bash ~/.claude/install-repo-hooks.sh
+```
+
+If you forget, the `anaiis-preflight` skill will flag it when you run a health check.
+
+### Bypass when needed
+
+```bash
+SKIP_R_LINT=1 git commit -m "..."
+```
 
 ---
 
@@ -121,9 +207,54 @@ claude-cleanup --dry-run           # preview without deleting
 
 Bootstraps a memory directory for a project at `~/.claude/projects/<encoded-path>/memory/`. Creates six starter files: user profile, environment feedback, plan mode feedback, shell config feedback, global config reference, and a current phase stub.
 
-Run it once per project per machine. It is safe to re-run -- it exits immediately if the memory directory already exists.
+Run it once per project per machine. Safe to re-run -- exits immediately if the memory directory already exists.
 
 After seeding, always fill in `project_current_phase.md` manually with the active workstream and current state.
+
+---
+
+### `install-repo-hooks.sh`
+
+Adds standard pre-commit hooks to the current git repo. Creates `.git/hooks/pre-commit` if it does not exist, or appends to it if it does. Checks if each hook is already present before adding it.
+
+Currently installs: R lint via `r-lint-staged.sh`.
+
+Run once per repo per machine:
+
+```bash
+cd /path/to/repo
+bash ~/.claude/install-repo-hooks.sh
+```
+
+---
+
+### `r-lint-staged.sh`
+
+Shared R lint script for pre-commit hooks. Runs `lintr` on all staged `.R`/`.r` files using the global `~/.lintr` config. Uses `Rscript --no-init-file` to bypass `renv`'s `.Rprofile`, ensuring the global lintr installation is used regardless of which project you are in.
+
+Exits 1 (blocks commit) if any findings exist. Exits 0 (passes) if the files are clean or no R files are staged.
+
+Bypass: `SKIP_R_LINT=1 git commit ...`
+
+Not called directly -- invoked by each repo's `.git/hooks/pre-commit` via `install-repo-hooks.sh`.
+
+---
+
+### `post-edit-lint.sh`
+
+PostToolUse hook called automatically by Claude after every `Edit` or `Write` tool call. Dispatches by file extension to the appropriate linter and surfaces findings back to Claude.
+
+Not called directly -- configured in `claude/settings.json` under `hooks.PostToolUse`.
+
+---
+
+### `cost-guard.sh`
+
+PreToolUse hook for `Agent` and `WebFetch` tool calls. Estimates token cost and either informs (Explore/Plan agents, WebFetch) or gates (general-purpose agents) before proceeding.
+
+Cost tiers: MEDIUM (5k-25k), HIGH (15k-80k), VERY HIGH (50k-150k).
+
+Not called directly -- configured in `claude/settings.json` under `hooks.PreToolUse`.
 
 ---
 
@@ -152,6 +283,15 @@ Claude maintains persistent memory files per project at `~/.claude/projects/<enc
 
 **Memory types:** `user` (who you are), `feedback` (corrections and confirmed approaches), `project` (active workstreams), `reference` (where to find things).
 
+**What belongs in memory vs not:**
+
+| Save | Skip |
+|------|------|
+| Hard-won lessons (e.g., "never modify venvs without mapping all environments first") | Anything derivable from code or `git log` |
+| User preferences and working style | Completed task artifacts (copyedit reports, session summaries) |
+| External resource pointers (Linear project IDs, dashboards) | Design notes for work that is already shipped |
+| Non-obvious project state (pipeline status, active workstreams) | Git history summaries |
+
 **Update process:**
 
 - **Passive:** Claude saves memories during sessions when it encounters something non-obvious worth preserving.
@@ -179,7 +319,21 @@ Memory, session history, and compaction are independent. Compaction summarizes t
 
 The `graphify` binary lands in `~/.local/bin/graphify`, which is already on PATH. The skill file is tracked in the dotfiles repo and registered automatically via the `skills/` symlink. No `graphify install` needed.
 
-> Use `~/.pyenv/versions/3.12.12/bin/python -m pipx install <pkg>` for any future Python CLI tools. This pins each tool to 3.12.12 and keeps them isolated from project virtualenvs (like dbt's 3.12.4).
+> Use `~/.pyenv/versions/3.12.12/bin/python -m pipx install <pkg>` for any future Python CLI tools. This pins each tool to 3.12.12 and keeps them isolated from project virtualenvs.
+
+---
+
+## Per-machine setup (R tools)
+
+R packages (`lintr`, `styler`, `languageserver`) are installed per machine. Run once after cloning:
+
+```r
+install.packages(c("lintr", "styler", "languageserver"))
+```
+
+These are global packages (not project-isolated via renv) so they are available across all repos for linting and language server features.
+
+VS Code format-on-save is configured in the user-level `settings.json` (already set globally, not per-project).
 
 ---
 
@@ -187,4 +341,5 @@ The `graphify` binary lands in `~/.local/bin/graphify`, which is already on PATH
 
 1. Move the file into `~/.dotfiles/<category>/`
 2. Add a `symlink` line to `install.sh`
-3. Commit and push
+3. Create the symlink manually (`ln -sf`) without waiting for a full re-run
+4. Commit and push

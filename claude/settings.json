@@ -19,8 +19,7 @@
       "Bash(grep:*)",
       "Bash(find:*)",
       "Bash(cat:*)",
-      "Bash(head:*)",
-      "Bash(tail:*)",
+
       "Bash(wc:*)",
       "Bash(diff:*)",
       "Bash(sort:*)",
@@ -42,6 +41,17 @@
     ]
   },
   "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/post-edit-lint.sh"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Write|Edit",

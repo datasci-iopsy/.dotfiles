@@ -1,0 +1,23 @@
+linters: linters_with_defaults(
+    object_name_linter("snake_case"),
+    assignment_linter(),
+    line_length_linter(80L),
+    indentation_linter(indent = 2L),
+    commas_linter(),
+    infix_spaces_linter(),
+    spaces_inside_linter(),
+    brace_linter(),
+    pipe_continuation_linter(),
+    pipe_consistency_linter(pipe = "|>"),
+    quotes_linter(),
+    semicolon_linter(allow_compound = FALSE),
+    trailing_whitespace_linter(),
+    vector_logic_linter(),
+    function_return_linter(),
+    implicit_assignment_linter(),
+    T_and_F_symbol_linter()
+  )
+encoding: "UTF-8"
+exclude: "# nolint"
+exclude_start: "# nolint start"
+exclude_end: "# nolint end"
