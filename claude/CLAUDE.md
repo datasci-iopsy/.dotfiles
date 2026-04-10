@@ -21,7 +21,7 @@
 ## Token efficiency
 - Do not re-read files already in context.
 - Use targeted reads (offset/limit) for files over 200 lines.
-- Use Glob and Grep to narrow before Read. Do not read entire files speculatively.
+- Use Glob and Grep to narrow before Read. Do not read entire files speculatively. Never use Bash(grep), Bash(rg), or Bash(find) for file or content search; use the Grep and Glob tools instead.
 - Chain independent read-only shell commands with && in a single Bash call.
 - Be direct. Skip preamble ("Great question!", "Sure, I can help with that").
 - Prefer Read over Bash(cat) unless piping (e.g., cat file | jq).

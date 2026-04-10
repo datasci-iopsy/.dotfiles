@@ -16,10 +16,7 @@
       "Bash(python3:*)",
       "Bash(ls:*)",
       "Bash(tree:*)",
-      "Bash(grep:*)",
-      "Bash(find:*)",
       "Bash(cat:*)",
-
       "Bash(wc:*)",
       "Bash(diff:*)",
       "Bash(sort:*)",
@@ -32,7 +29,6 @@
       "Bash(gh:*)",
       "Bash(jq:*)",
       "Bash(duckdb:*)",
-      "Bash(rg:*)",
       "Bash(textutil:*)",
       "Bash(gcloud config get-value *)",
       "Bash(gcloud projects describe *)",
