@@ -52,7 +52,7 @@ cd /path/to/project
 bash ~/.claude/install-repo-hooks.sh
 ```
 
-This adds R lint enforcement to the pre-commit hook. Safe to re-run -- skips if already in place. See the [R Style Enforcement](#r-style-enforcement) section for the full picture.
+This adds R lint enforcement and Python ruff lint/format enforcement to the pre-commit hook. Safe to re-run -- skips hooks that are already in place. See [R Style Enforcement](#r-style-enforcement) and [Python Style Enforcement](#python-style-enforcement) for the full picture.
 
 ---
 
@@ -67,7 +67,10 @@ claude/
   cost-guard.sh           → ~/.claude/cost-guard.sh          Agent cost transparency hook
   post-edit-lint.sh       → ~/.claude/post-edit-lint.sh      PostToolUse lint hook (py/sh/R)
   r-lint-staged.sh        → ~/.claude/r-lint-staged.sh       Pre-commit R lint for any repo
+  ruff-lint-staged.sh     → ~/.claude/ruff-lint-staged.sh    Pre-commit Python lint/format check for any repo
   install-repo-hooks.sh   → ~/.claude/install-repo-hooks.sh  One-command hook installer for new repos
+  clean-plans.sh          → ~/.claude/clean-plans.sh         Interactive plan file cleanup
+  maintenance-check.sh    → ~/.claude/maintenance-check.sh   Session-start maintenance reminder hook
   skills/                 → ~/.claude/skills/                All custom skills (symlinked as a directory)
   cleanup-sessions.py     → ~/.local/bin/claude-cleanup      Interactive session cleanup CLI
   seed-memory.sh                                             Per-project memory bootstrapper (not symlinked)
@@ -93,13 +96,21 @@ Hooks are configured in `claude/settings.json` under the `hooks` key. They run s
 
 ### Active hooks
 
+**UserPromptSubmit -- maintenance reminders (`maintenance-check.sh`)**
+Fires on every user message. Checks maintenance metrics against thresholds on a cadence controlled by stamp files -- does not fire the full check on every prompt. Prints a one-line reminder to stderr (non-blocking, zero tokens injected into context) when action is needed.
+
+- Plans: checked weekly. Notifies if >10 plan files exist or any are older than 14 days.
+- Sessions: checked monthly. Notifies if `~/.claude/projects` exceeds 50 MB.
+
+Stamp files: `~/.claude/.maintenance-plans` (updated weekly), `~/.claude/.maintenance-sessions` (updated monthly). Delete a stamp to force an immediate re-check.
+
 **PostToolUse: Edit|Write -- lint on save (`post-edit-lint.sh`)**
-Runs after every file edit or write. Lints by file type:
-- `.py` -- `ruff check` (first 5 findings)
+Runs after every file edit or write. Dispatches by file type:
+- `.py` -- `ruff check` (lint, first 5 findings) then `ruff format` (auto-formats the file in place)
 - `.sh` -- `shellcheck --severity=warning` (first 5 findings)
 - `.R` / `.r` -- `lintr::lint()` using `~/.lintr` config (first 10 findings)
 
-Always exits 0 -- informational only, never blocks Claude. Uses `--no-init-file` for R to bypass `renv`'s `.Rprofile` and use the global lintr installation.
+Always exits 0 -- informational only, never blocks Claude. The `ruff format` step auto-fixes Python formatting immediately so files are clean before the next git commit. Uses `--no-init-file` for R to bypass `renv`'s `.Rprofile` and use the global lintr installation.
 
 **PreToolUse: Write|Edit -- sensitive file guard**
 Hard-blocks (exit 2) writes to files matching `*.lock`, `*.env`, `*credentials*`, `*secret*`, `*.pem`, `*.key`.
@@ -174,6 +185,40 @@ SKIP_R_LINT=1 git commit -m "..."
 
 ---
 
+## Python Style Enforcement
+
+Python files are formatted and linted with [ruff](https://docs.astral.sh/ruff/). Enforcement is automatic at multiple layers.
+
+### Enforcement chain
+
+| When | Tool | What it does |
+|------|------|-------------|
+| Claude edits a `.py` file | `post-edit-lint.sh` hook | Runs `ruff check` (lint findings reported to Claude) then `ruff format` (auto-formats in place) |
+| `git commit` | `ruff-lint-staged.sh` pre-commit | Blocks commit if lint errors exist or format drift is detected |
+
+**Why two layers?** The Claude hook auto-fixes formatting immediately after each edit, so by commit time files should already be clean. The pre-commit hook is the safety net that enforces this for any file edited outside of Claude.
+
+### Adding Python lint to a new repo
+
+```bash
+cd /path/to/repo
+bash ~/.claude/install-repo-hooks.sh
+```
+
+This installs both the R lint and ruff hooks in a single run.
+
+### Bypass when needed
+
+```bash
+SKIP_RUFF=1 git commit -m "..."
+```
+
+### Per-project ruff config
+
+ruff reads `pyproject.toml` or `ruff.toml` in the project root if present. Without one, ruff's defaults apply. To set project-level rules, add a `[tool.ruff]` section to `pyproject.toml`.
+
+---
+
 ## Scripts
 
 ### `claude-cleanup`
@@ -217,7 +262,7 @@ After seeding, always fill in `project_current_phase.md` manually with the activ
 
 Adds standard pre-commit hooks to the current git repo. Creates `.git/hooks/pre-commit` if it does not exist, or appends to it if it does. Checks if each hook is already present before adding it.
 
-Currently installs: R lint via `r-lint-staged.sh`.
+Currently installs: R lint via `r-lint-staged.sh` and Python ruff lint/format via `ruff-lint-staged.sh`.
 
 Run once per repo per machine:
 
@@ -240,9 +285,70 @@ Not called directly -- invoked by each repo's `.git/hooks/pre-commit` via `insta
 
 ---
 
+### `ruff-lint-staged.sh`
+
+Shared Python lint and format-check script for pre-commit hooks. Runs on all staged `.py` files in two passes:
+
+1. `ruff check` -- lint errors block the commit and are printed to the terminal.
+2. `ruff format --check` -- format drift blocks the commit with a `ruff format <files>` fix command. Does not auto-fix staged files (applying edits to staged but uncommitted files would cause the committed version to differ from what was tested).
+
+Exits 1 (blocks commit) if either pass has findings. Exits 0 if the files are clean or no Python files are staged.
+
+Bypass: `SKIP_RUFF=1 git commit ...`
+
+Not called directly -- invoked by each repo's `.git/hooks/pre-commit` via `install-repo-hooks.sh`.
+
+---
+
+### `clean-plans.sh`
+
+Interactive plan file cleanup. Lists plan files in `~/.claude/plans/` that are older than N days (default: 14) and prompts for confirmation before deleting.
+
+```bash
+bash ~/.claude/clean-plans.sh        # default: 14-day cutoff
+bash ~/.claude/clean-plans.sh 30     # custom cutoff
+```
+
+Plan files are Claude Code's auto-generated session plan records (`~/.claude/plans/*.md`). They accumulate over time and are never auto-deleted. Running this monthly (or when prompted by the maintenance hook) keeps the directory clean.
+
+---
+
+### `maintenance-check.sh`
+
+UserPromptSubmit hook that fires at the start of each session. Checks two metrics on a cadence controlled by stamp files:
+
+| Check | Cadence | Threshold | Reminder command |
+|-------|---------|-----------|-----------------|
+| Plan files | Weekly | >10 files or any older than 14 days | `bash ~/.claude/clean-plans.sh` |
+| Session storage | Monthly | `~/.claude/projects` >50 MB | `claude-cleanup --older-than 30` |
+
+Reminders are printed to stderr (visible in the terminal, not injected into Claude's conversation context). Always exits 0 -- never blocks a session.
+
+**Stamp files** (in `~/.claude/`):
+
+| File | Updated | Purpose |
+|------|---------|---------|
+| `.maintenance-plans` | Weekly | Tracks last plan check date |
+| `.maintenance-sessions` | Monthly | Tracks last session check date |
+
+To force an immediate re-check: `rm ~/.claude/.maintenance-plans` or `rm ~/.claude/.maintenance-sessions`.
+
+Not called directly -- configured in `claude/settings.json` under `hooks.UserPromptSubmit`.
+
+---
+
 ### `post-edit-lint.sh`
 
-PostToolUse hook called automatically by Claude after every `Edit` or `Write` tool call. Dispatches by file extension to the appropriate linter and surfaces findings back to Claude.
+PostToolUse hook called automatically by Claude after every `Edit` or `Write` tool call. Dispatches by file extension:
+
+| Extension | Tool | Behavior |
+|-----------|------|----------|
+| `.py` | `ruff check` | Reports lint findings (first 5) to Claude |
+| `.py` | `ruff format` | Auto-formats the file in place |
+| `.sh` | `shellcheck` | Reports warnings (first 5) to Claude |
+| `.R` / `.r` | `lintr` | Reports style findings (first 10) to Claude |
+
+The Python path runs both tools in sequence: lint is reported for Claude to review; format is applied automatically. By the time a Python file reaches a git commit, it will already be formatted.
 
 Not called directly -- configured in `claude/settings.json` under `hooks.PostToolUse`.
 
