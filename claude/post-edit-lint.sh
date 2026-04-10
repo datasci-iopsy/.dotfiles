@@ -16,8 +16,10 @@ case "$FILE" in
 
   *.py)
     if command -v ruff &>/dev/null; then
-      echo "[lint] ruff: $FILE" >&2
+      echo "[lint] ruff check: $FILE" >&2
       ruff check --quiet "$FILE" 2>&1 | head -5
+      echo "[lint] ruff format: $FILE" >&2
+      ruff format --quiet "$FILE" 2>&1
     fi
     ;;
 
