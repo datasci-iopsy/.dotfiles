@@ -60,3 +60,19 @@
 - **Simplicity first**: Make every change as simple as possible. Minimal code impact.
 - **Find root causes**: No temporary fixes. Senior developer standards.
 - **Minimal impact**: Only touch what's necessary. Avoid introducing bugs.
+
+## Compaction
+
+When compacting, preserve:
+- **Current task state**: what was being worked on, decisions made, files changed and why
+- **Worktree and branch context**: which worktree or directory was active -- losing this causes recurring friction
+- **Mid-session corrections**: any style or approach corrections the user made during the session (these take priority over CLAUDE.md defaults for the remainder of the session)
+- **Active findings**: open errors, blockers, or unresolved items
+- **Memory writes**: any memories written or updated during the session
+
+Compress aggressively:
+- Full file contents that were read -- note the file and the key finding only
+- Tool output chains where only the conclusion matters
+- Exploratory paths that were ruled out
+
+User override: explicit instructions passed via `/compact <prompt>` take priority over these defaults.
