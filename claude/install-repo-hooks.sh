@@ -63,4 +63,4 @@ fi
 
 echo ""
 echo "Done. Pre-commit hook active for this repo."
-echo "Bypass at any time: SKIP_R_LINT=1 git commit ..."
+echo "Bypass: SKIP_R_LINT=1 git commit ...  (R lint)  |  SKIP_RUFF=1 git commit ...  (Python)"

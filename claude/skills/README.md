@@ -121,7 +121,7 @@ Custom skills use the `anaiis-` namespace prefix to avoid collisions. Externally
 
 **Trigger:** Documentation accuracy audit requests -- verifying that docs, comments, or schema descriptions match the current state of the code.
 
-**What it does:** Reads the current codebase state and cross-checks it against documentation, flagging stale descriptions, incorrect field names, and missing entries.
+**What it does:** Audits all `README.md` and `CLAUDE.md` files against the current codebase state. Verifies file paths, Make targets, dependency versions, and component claims using Glob/Grep/Read (no shell commands for search). Writes a structured report to a file; does not make changes.
 
 ---
 

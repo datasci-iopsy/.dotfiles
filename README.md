@@ -419,6 +419,8 @@ Memory, session history, and compaction are independent. Compaction summarizes t
 ~/.pyenv/versions/3.12.12/bin/python -m pip install pipx
 
 # graphify -- codebase knowledge graph generator (https://github.com/safishamsi/graphify)
+# PyPI package is named "graphifyy" (double y) -- "graphify" on PyPI is a different, unaffiliated package.
+# The installed binary is still invoked as "graphify".
 ~/.pyenv/versions/3.12.12/bin/python -m pipx install graphifyy \
   --python ~/.pyenv/versions/3.12.12/bin/python
 ```
