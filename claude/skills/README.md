@@ -117,6 +117,22 @@ Custom skills use the `anaiis-` namespace prefix to avoid collisions. Externally
 
 ---
 
+### `anaiis-gitrebase`
+
+**Trigger:** The user wants to rebase, clean up, reorganize, or squash commits into logical groups before PR review.
+
+**What it does:** Reconstructs commit history on a temporary branch by checking out file states from the final commit into logical groups, avoiding interactive rebase entirely. Five-phase workflow: preflight, analysis, execute, verify, swap. Two mandatory user gates (confirm grouping before execution, confirm verification before branch swap). Claude never force-pushes -- the final output is the verified result and the exact `git push --force-with-lease` command for the user to run.
+
+**Key rules:**
+- Creates a `safety/pre-rebase-<branch>` tag before any destructive operation
+- Verifies tree equality (`git diff` must be empty) before swapping branches
+- Pauses and asks the user on any pre-commit hook failure during reconstruction
+- Refuses to operate on merge commits or a dirty working tree
+- `--dry-run` flag outputs proposed grouping without executing anything
+- Maximum 10 logical commit groups per rebase
+
+---
+
 ### `anaiis-docaudit`
 
 **Trigger:** Documentation accuracy audit requests -- verifying that docs, comments, or schema descriptions match the current state of the code.
