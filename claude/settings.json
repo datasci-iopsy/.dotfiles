@@ -30,9 +30,18 @@
       "Bash(jq:*)",
       "Bash(duckdb:*)",
       "Bash(textutil:*)",
-      "Bash(gcloud config get-value *)",
-      "Bash(gcloud projects describe *)",
+      "Bash(bq show *)",
+      "Bash(bq ls *)",
+      "Bash(bq ls)",
+      "Bash(bq query *)",
+      "Bash(bq head *)",
+      "Bash(bq version)",
       "Bash(gcloud auth list)",
+      "Bash(gcloud config *)",
+      "Bash(gcloud projects list *)",
+      "Bash(gcloud projects describe *)",
+      "Bash(gcloud * list *)",
+      "Bash(gcloud * describe *)",
       "Bash(graphify:*)"
     ]
   },
@@ -71,6 +80,10 @@
       {
         "matcher": "Bash",
         "hooks": [
+          {
+            "type": "command",
+            "command": "CMD=$(jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE '^bq\\s+rm\\b'; then echo 'BLOCK: bq rm is destructive. Run this manually in terminal.' >&2; exit 2; fi; if echo \"$CMD\" | grep -qE '^gcloud\\s.*(delete|destroy|remove-iam-policy|set-iam-policy|disable|reset-windows-password)'; then echo 'BLOCK: Destructive gcloud command detected. Run this manually in terminal.' >&2; exit 2; fi; exit 0"
+          },
           {
             "type": "command",
             "command": "CMD=$(jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE '(python|python3)' && echo \"$CMD\" | grep -qE '(import json|json\\.loads|json\\.dumps)'; then echo 'Prefer jq over Python for JSON parsing -- jq is pre-approved, streaming, and faster for shell tasks.' >&2; exit 1; fi; exit 0"

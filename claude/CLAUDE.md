@@ -11,6 +11,11 @@
 - Use `gcloud` for GCP operations (read-only unless user confirms).
 - Prefer `make` targets over raw commands when a Makefile exists.
 - Check for project and subdirectory CLAUDE.md files before starting work.
+- When invoking CLIs that support structured output, always use their JSON or machine-readable flag. Never parse tabular stdout. Known flags: `gh` (`--json`), `gcloud` (`--format=json`), `bq` (`--format=json`), `dbt` (`--output json`), `duckdb` (`-json`). For any other CLI, check for a `--format`, `--output`, or `--json` flag before running and use it if available.
+
+## Shell command formatting
+- Multi-line commands with backslash continuations are fine for readability. Only split at argument or flag boundaries, never inside a quoted string. A backslash continuation must appear outside of all quotes -- breaking a quoted string across lines causes bash to treat the continuation lines as separate commands, not as part of the string. When in doubt, print the command on a single line rather than risk splitting inside a quote.
+- In code blocks containing shell commands, do not indent the command itself. Keep it flush-left within the block.
 
 ## Writing style
 - Never use em dashes. Use commas, semicolons, parentheses, or separate sentences.
