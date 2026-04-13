@@ -101,7 +101,10 @@
       }
     ]
   },
-  "env": {},
+  "env": {
+    "GIT_AUTHOR_NAME": "datasci-iopsy",
+    "GIT_COMMITTER_NAME": "datasci-iopsy"
+  },
   "statusLine": {
     "type": "command",
     "command": "bash $HOME/.claude/statusline-command.sh"
