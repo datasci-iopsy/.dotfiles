@@ -90,6 +90,25 @@ Current skills: `anaiis-agents`, `anaiis-changelog`, `anaiis-copyedit`, `anaiis-
 
 ---
 
+## Git author identity
+
+Git commit authorship for Claude-driven commits is controlled by two environment variables in `claude/settings.json` under the `env` key:
+
+```json
+"env": {
+  "GIT_AUTHOR_NAME": "datasci-iopsy",
+  "GIT_COMMITTER_NAME": "datasci-iopsy"
+}
+```
+
+Git environment variables take precedence over all `git config` settings, so any commit Claude makes via the Bash tool uses the name set here. The email continues to come from `~/.gitconfig`.
+
+**Why this matters:** Claude Code's internal commit mechanism previously used "Claude" as the author name, bypassing git config. Setting `GIT_AUTHOR_NAME`/`GIT_COMMITTER_NAME` in the harness `env` block is the only reliable way to enforce identity for every commit Claude makes.
+
+**Scope of `attribution.commit`:** The `attribution` block in `settings.json` controls only the `Co-Authored-By` trailer appended to commit messages. It does not affect the git author or committer identity fields. Author identity is entirely determined by the `env` block above.
+
+---
+
 ## Hooks
 
 Hooks are configured in `claude/settings.json` under the `hooks` key. They run shell commands at specific points in Claude's lifecycle.
