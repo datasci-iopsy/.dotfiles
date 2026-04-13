@@ -55,29 +55,44 @@
 - Stage files by name, not `git add -A` or `git add .`.
 
 ## Workflow
+- Before starting: if a request has multiple valid interpretations, surface them and ask -- don't pick silently. If something is unclear, name what's confusing before proceeding.
+- Before starting non-trivial tasks: state the verifiable success criteria (what "done" looks like and how it will be confirmed), not just the steps.
 - While in plan mode, if something goes sideways mid-task, stop and re-plan -- don't keep pushing.
 - Use subagents liberally to keep the main context window clean. Offload research, exploration, and parallel analysis to subagents. One task per subagent for focused execution.
 - Never mark a task complete without proving it works. Run tests, check logs, demonstrate correctness.
 - For non-trivial changes, consider if there's a simpler approach. Skip for obvious fixes.
 - For bugs, just fix them. Point at evidence, resolve.
 
+## R programming
+
+**Default to vectorization over for-loops.** R's built-in vectorized operations run in compiled C/Fortran and are substantially faster than R-level loops at any meaningful data size.
+
+**Vectorization preference hierarchy (highest to lowest):**
+1. Built-in vectorized functions: `+`, `*`, `sqrt()`, `sum()`, `rowSums()`, `colMeans()`, `paste0()`, etc.
+2. `lapply()` / `vapply()` over lists -- these dispatch via C, not R-level loops. Prefer `vapply()` over `sapply()` in performance-sensitive code (pre-specified output type, faster).
+3. Pre-allocated for-loop when vectorization is impossible: always initialize output before the loop (`out <- numeric(length(x))`), never grow inside the loop.
+4. Rcpp for sequential-dependent or compute-intensive logic that exceeds R-level vectorization.
+
+**Do NOT use a for-loop when:** the operation is element-wise arithmetic, a math function, or a simple transformation on a vector -- use the vectorized built-in instead.
+
+**Use a for-loop (or Rcpp) when:**
+- Each iteration depends on the previous result (sequential dependency -- vectorization is structurally impossible).
+- Early exit via `break` or `next` is needed (vectorized operations evaluate all elements).
+- Multi-branch conditional logic per row is complex enough that nested `ifelse()` is harder to read and debug than an explicit loop.
+
+**Avoid `apply()` on data frames.** It coerces to matrix and uses an R-level loop internally. Use `lapply()`, `vapply()`, or column-wise vectorized functions instead. `rowSums()` / `colMeans()` are faster than `apply(df, 1/2, sum/mean)`.
+
+**Profile before optimizing.** For small `n` (< ~1,000) or when each iteration is expensive (model fit, I/O), the loop vs. vectorization distinction is negligible. Don't vectorize for its own sake when correctness and readability are clearer in a loop.
+
 ## Core principles
 - **Simplicity first**: Make every change as simple as possible. Minimal code impact.
 - **Find root causes**: No temporary fixes. Senior developer standards.
-- **Minimal impact**: Only touch what's necessary. Avoid introducing bugs.
+- **Minimal impact**: Only touch what's necessary. Avoid introducing bugs. Remove imports, variables, or functions YOUR changes made unused -- but don't remove pre-existing dead code unless asked.
 
 ## Compaction
 
-When compacting, preserve:
-- **Current task state**: what was being worked on, decisions made, files changed and why
-- **Worktree and branch context**: which worktree or directory was active -- losing this causes recurring friction
-- **Mid-session corrections**: any style or approach corrections the user made during the session (these take priority over CLAUDE.md defaults for the remainder of the session)
-- **Active findings**: open errors, blockers, or unresolved items
-- **Memory writes**: any memories written or updated during the session
+Preserve: current task state (decisions, files changed, why), active worktree/branch, mid-session corrections (override CLAUDE.md for remainder of session), open errors/blockers, memory writes.
 
-Compress aggressively:
-- Full file contents that were read -- note the file and the key finding only
-- Tool output chains where only the conclusion matters
-- Exploratory paths that were ruled out
+Compress: file contents (key finding only), tool output chains (conclusion only), ruled-out paths.
 
-User override: explicit instructions passed via `/compact <prompt>` take priority over these defaults.
+`/compact <prompt>` overrides these defaults.
