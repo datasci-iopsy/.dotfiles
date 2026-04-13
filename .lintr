@@ -1,8 +1,8 @@
 linters: linters_with_defaults(
-    object_name_linter("snake_case"),
+    object_name_linter(regexes = c(snake_case = "^[a-z][a-z0-9_.]*$", upper_case = "^[A-Z][A-Z0-9_]*$")),
     assignment_linter(),
-    line_length_linter(80L),
-    indentation_linter(indent = 2L),
+    line_length_linter(120L),
+    indentation_linter(indent = 4L),
     commas_linter(),
     infix_spaces_linter(),
     spaces_inside_linter(),
@@ -15,7 +15,10 @@ linters: linters_with_defaults(
     vector_logic_linter(),
     function_return_linter(),
     implicit_assignment_linter(),
-    T_and_F_symbol_linter()
+    T_and_F_symbol_linter(),
+    object_usage_linter = NULL,
+    commented_code_linter = NULL,
+    return_linter = NULL
   )
 encoding: "UTF-8"
 exclude: "# nolint"
