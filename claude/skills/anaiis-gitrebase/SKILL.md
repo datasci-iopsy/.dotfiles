@@ -90,13 +90,17 @@ If `--dry-run`: output the plan and stop.
 
 ## Phase 3: Execute (destructive)
 
-**First: create the safety bookmark.**
+**First: capture state and create the safety bookmark.**
+
+Run each command separately (not chained with variable assignments) so each starts with `git`:
 
 ```bash
-FINAL_SHA=$(git rev-parse HEAD)
-BRANCH=$(git branch --show-current)
-git tag safety/pre-rebase-${BRANCH} ${FINAL_SHA}
+git rev-parse HEAD
+git branch --show-current
+git tag safety/pre-rebase-<branch> <sha>
 ```
+
+Use the literal SHA and branch name returned by the above commands in all subsequent calls.
 
 Tell the user:
 
@@ -112,9 +116,11 @@ git checkout -b tmp/rebase-${BRANCH} <fork>
 **For each commit group (in order):**
 
 ```bash
-git checkout ${FINAL_SHA} -- <file1> <file2> ...
+git checkout <literal-sha> -- <file1> <file2> ...
 git commit -m "<message>"
 ```
+
+**IMPORTANT -- command formatting:** Always substitute the SHA as a literal hex string directly in the command (e.g., `git checkout abc1234 -- file.py`). Never use shell variable assignments like `FINAL=<sha> && git checkout ${FINAL} --`. Commands must start with `git` to match the pre-approved `Bash(git:*)` allow pattern -- the one exception is `ALLOW_LOCK_COMMIT=1 git commit -m "..."`, which is pre-approved and may be used when the lock file hook would otherwise block a commit.
 
 **File deletions:** if a file existed at the fork point but was deleted by HEAD, use `git rm <file>` in the appropriate group rather than `git checkout`.
 
@@ -126,11 +132,11 @@ git commit -m "<message>"
 ## Phase 4: Verify
 
 ```bash
-git diff ${FINAL_SHA} tmp/rebase-${BRANCH}
+git diff <literal-sha> tmp/rebase-<branch>
 ```
 
 - **Empty diff:** "Tree equality verified. New history produces identical file contents."
-- **Non-empty diff:** hard stop. Show the diff. Do NOT proceed. Offer to abort: `git checkout ${BRANCH} && git reset --hard safety/pre-rebase-${BRANCH} && git branch -D tmp/rebase-${BRANCH}`.
+- **Non-empty diff:** hard stop. Show the diff. Do NOT proceed. Offer to abort using literal branch/sha values (no shell variable expansions).
 
 ---
 
@@ -140,10 +146,12 @@ git diff ${FINAL_SHA} tmp/rebase-${BRANCH}
 
 ## Phase 5: Swap
 
+Use literal branch names (no shell variable expansions):
+
 ```bash
-git checkout ${BRANCH}
-git reset --hard tmp/rebase-${BRANCH}
-git branch -d tmp/rebase-${BRANCH}
+git checkout <branch>
+git reset --hard tmp/rebase-<branch>
+git branch -d tmp/rebase-<branch>
 ```
 
 Output the final commit log:

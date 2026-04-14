@@ -42,7 +42,8 @@
       "Bash(gcloud projects describe *)",
       "Bash(gcloud * list *)",
       "Bash(gcloud * describe *)",
-      "Bash(graphify:*)"
+      "Bash(graphify:*)",
+      "Bash(ALLOW_LOCK_COMMIT=1 git commit*)"
     ]
   },
   "hooks": {
