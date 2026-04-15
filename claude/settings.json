@@ -1,11 +1,14 @@
 {
-  "model": "opusplan",
+  "env": {
+    "GIT_AUTHOR_NAME": "datasci-iopsy",
+    "GIT_COMMITTER_NAME": "datasci-iopsy"
+  },
   "attribution": {
     "commit": "",
     "pr": ""
   },
+  "includeGitInstructions": false,
   "permissions": {
-    "defaultMode": "default",
     "allow": [
       "Read",
       "Read(/var/folders/*/*/T/coderabbit-instructions-*.txt)",
@@ -44,7 +47,8 @@
       "Bash(gcloud * describe *)",
       "Bash(graphify:*)",
       "Bash(ALLOW_LOCK_COMMIT=1 git commit*)"
-    ]
+    ],
+    "defaultMode": "default"
   },
   "hooks": {
     "UserPromptSubmit": [
@@ -102,14 +106,10 @@
       }
     ]
   },
-  "env": {
-    "GIT_AUTHOR_NAME": "datasci-iopsy",
-    "GIT_COMMITTER_NAME": "datasci-iopsy"
-  },
   "statusLine": {
     "type": "command",
     "command": "bash $HOME/.claude/statusline-command.sh"
   },
   "effortLevel": "medium",
-  "includeGitInstructions": false
+  "model": "opusplan"
 }
