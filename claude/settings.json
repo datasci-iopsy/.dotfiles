@@ -46,6 +46,7 @@
       "Bash(gcloud * list *)",
       "Bash(gcloud * describe *)",
       "Bash(graphify:*)",
+      "Bash(uv:*)",
       "Bash(ALLOW_LOCK_COMMIT=1 git commit*)"
     ],
     "defaultMode": "default"
@@ -87,7 +88,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "CMD=$(jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE '^bq\\s+rm\\b'; then echo 'BLOCK: bq rm is destructive. Run this manually in terminal.' >&2; exit 2; fi; if echo \"$CMD\" | grep -qE '^gcloud\\s.*(delete|destroy|remove-iam-policy|set-iam-policy|disable|reset-windows-password)'; then echo 'BLOCK: Destructive gcloud command detected. Run this manually in terminal.' >&2; exit 2; fi; exit 0"
+            "command": "CMD=$(jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE '^bq\\s+rm\\b'; then echo 'BLOCK: bq rm is destructive. Run this manually in terminal.' >&2; exit 2; fi; if echo \"$CMD\" | grep -qE '^gcloud\\s.*(delete|destroy|remove-iam-policy|set-iam-policy|disable|reset-windows-password)'; then echo 'BLOCK: Destructive gcloud command detected. Run this manually in terminal.' >&2; exit 2; fi; if echo \"$CMD\" | grep -qE '^uv\\s+(cache\\s+(clean|prune)|publish|tool\\s+uninstall|pip\\s+uninstall)'; then echo 'BLOCK: Destructive uv command detected. Run this manually in terminal.' >&2; exit 2; fi; exit 0"
           },
           {
             "type": "command",
