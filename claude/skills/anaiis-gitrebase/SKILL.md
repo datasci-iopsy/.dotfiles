@@ -28,6 +28,8 @@ Examples:
 - `Grep`/`Glob` only when file purpose is ambiguous from its path alone
 - Never use `Read` to examine file contents for grouping decisions; `--stat` and `--name-only` output is sufficient
 
+**Working directory:** All git commands must start with `git` to match the pre-approved `Bash(git:*)` pattern. If the current shell cwd is not the repo root, use `git -C <absolute-repo-root> <subcommand>` -- never `cd <path> && git <subcommand>`. Determine the repo root once with `git rev-parse --show-toplevel` and use it as the `-C` argument throughout the session.
+
 ## Phase 1: Preflight (read-only)
 
 Run all checks in a single chained Bash call:
@@ -120,7 +122,7 @@ git checkout <literal-sha> -- <file1> <file2> ...
 git commit -m "<message>"
 ```
 
-**IMPORTANT -- command formatting:** Always substitute the SHA as a literal hex string directly in the command (e.g., `git checkout abc1234 -- file.py`). Never use shell variable assignments like `FINAL=<sha> && git checkout ${FINAL} --`. Commands must start with `git` to match the pre-approved `Bash(git:*)` allow pattern -- the one exception is `ALLOW_LOCK_COMMIT=1 git commit -m "..."`, which is pre-approved and may be used when the lock file hook would otherwise block a commit.
+**IMPORTANT -- command formatting:** Always substitute the SHA as a literal hex string directly in the command (e.g., `git checkout abc1234 -- file.py`). Never use shell variable assignments like `FINAL=<sha> && git checkout ${FINAL} --`. Commands must start with `git` to match the pre-approved `Bash(git:*)` allow pattern. If the shell cwd is not the repo root, prefix every command with `git -C <absolute-repo-root>` (e.g., `git -C /path/to/repo checkout abc1234 -- file.py`) -- never use `cd /path && git`. The one exception is `ALLOW_LOCK_COMMIT=1 git commit -m "..."`, which is pre-approved and may be used when the lock file hook would otherwise block a commit.
 
 **File deletions:** if a file existed at the fork point but was deleted by HEAD, use `git rm <file>` in the appropriate group rather than `git checkout`.
 
