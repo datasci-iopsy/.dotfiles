@@ -1,0 +1,16 @@
+# Machine-local Claude overrides
+
+<!-- Do not commit this file. It is gitignored. -->
+<!-- Copy from CLAUDE.local.md.template and edit for this machine. -->
+
+## This machine
+
+- OS:
+- Python path / pyenv root:
+- Active R version:
+- Notable env vars (set in ~/.bash_profile):
+
+## Local deviations from global rules
+
+<!-- Add any machine-specific overrides to rules/ here. -->
+<!-- Example: different default model, different shell, different GCP project. -->

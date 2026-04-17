@@ -17,8 +17,8 @@ if [ $? -ne 0 ] || [ -z "$HOOK_DIR" ]; then
 fi
 
 HOOK_FILE="$HOOK_DIR/pre-commit"
-R_LINT_LINE='bash "$HOME/.claude/r-lint-staged.sh"'
-RUFF_LINT_LINE='bash "$HOME/.claude/ruff-lint-staged.sh"'
+R_LINT_LINE='bash "$HOME/.claude/scripts/r-lint-staged.sh"'
+RUFF_LINT_LINE='bash "$HOME/.claude/scripts/ruff-lint-staged.sh"'
 SHEBANG='#!/usr/bin/env bash'
 
 # --- Create or update pre-commit hook ---

@@ -11,32 +11,64 @@ symlink() {
     local src="$1" dst="$2"
     mkdir -p "$(dirname "$dst")"
     if [ -L "$dst" ] && [ "$(readlink "$dst")" = "$src" ]; then
-        echo "  ok  $dst"
+        echo "  ok   $dst"
     elif [ -e "$dst" ] && [ ! -L "$dst" ]; then
-        echo "  SKIP $dst (exists as real file — back it up and remove it first)"
+        echo "  SKIP $dst (real file exists — back it up and remove it first)"
     else
         ln -sf "$src" "$dst"
         echo "  link $dst -> $src"
     fi
 }
 
-echo "=== Claude Code ==="
-symlink "$DOTFILES/claude/settings.json"          "$HOME/.claude/settings.json"
-symlink "$DOTFILES/claude/CLAUDE.md"              "$HOME/.claude/CLAUDE.md"
-symlink "$DOTFILES/claude/statusline-command.sh"  "$HOME/.claude/statusline-command.sh"
-symlink "$DOTFILES/claude/keybindings.json"       "$HOME/.claude/keybindings.json"
-symlink "$DOTFILES/claude/skills"               "$HOME/.claude/skills"
-symlink "$DOTFILES/claude/cleanup-sessions.py"  "$HOME/.local/bin/claude-cleanup"
-symlink "$DOTFILES/claude/cost-guard.sh"        "$HOME/.claude/cost-guard.sh"
-symlink "$DOTFILES/claude/post-edit-lint.sh"    "$HOME/.claude/post-edit-lint.sh"
-symlink "$DOTFILES/claude/r-lint-staged.sh"      "$HOME/.claude/r-lint-staged.sh"
-symlink "$DOTFILES/claude/ruff-lint-staged.sh"   "$HOME/.claude/ruff-lint-staged.sh"
-symlink "$DOTFILES/claude/install-repo-hooks.sh" "$HOME/.claude/install-repo-hooks.sh"
-symlink "$DOTFILES/claude/clean-plans.sh"        "$HOME/.claude/clean-plans.sh"
-symlink "$DOTFILES/claude/maintenance-check.sh"  "$HOME/.claude/maintenance-check.sh"
+copy_template() {
+    local src="$1" dst="$2"
+    mkdir -p "$(dirname "$dst")"
+    if [ -e "$dst" ]; then
+        echo "  ok   $dst (already exists)"
+    else
+        cp "$src" "$dst"
+        echo "  copy $dst (from template)"
+    fi
+}
 
-echo "=== R Style ==="
-symlink "$DOTFILES/.lintr"                      "$HOME/.lintr"
+echo "=== Claude Code: Config files ==="
+symlink "$DOTFILES/claude/settings.json"    "$HOME/.claude/settings.json"
+symlink "$DOTFILES/claude/CLAUDE.md"        "$HOME/.claude/CLAUDE.md"
+symlink "$DOTFILES/claude/keybindings.json" "$HOME/.claude/keybindings.json"
 
 echo ""
-echo "Done. Run seed-memory.sh to initialize Claude memory files for a project."
+echo "=== Claude Code: Directories ==="
+symlink "$DOTFILES/claude/rules"    "$HOME/.claude/rules"
+symlink "$DOTFILES/claude/commands" "$HOME/.claude/commands"
+symlink "$DOTFILES/claude/skills"   "$HOME/.claude/skills"
+symlink "$DOTFILES/claude/agents"   "$HOME/.claude/agents"
+symlink "$DOTFILES/claude/hooks"    "$HOME/.claude/hooks"
+symlink "$DOTFILES/claude/scripts"  "$HOME/.claude/scripts"
+
+echo ""
+echo "=== Claude Code: Machine-local config (copy-once, then edit) ==="
+copy_template "$DOTFILES/claude/settings.local.json.template" \
+              "$HOME/.claude/settings.local.json"
+copy_template "$DOTFILES/claude/CLAUDE.local.md.template" \
+              "$HOME/.claude/CLAUDE.local.md"
+
+echo ""
+echo "=== Claude Code: CLI tools ==="
+symlink "$DOTFILES/claude/scripts/cleanup-sessions.py" "$HOME/.local/bin/claude-cleanup"
+
+echo ""
+echo "=== MCP ==="
+symlink "$DOTFILES/.mcp.json" "$HOME/.mcp.json"
+
+echo ""
+echo "=== R Style ==="
+symlink "$DOTFILES/.lintr" "$HOME/.lintr"
+
+echo ""
+echo "Done."
+echo ""
+echo "Next steps:"
+echo "  1. Edit ~/.claude/settings.local.json  — set GITHUB_TOKEN and model"
+echo "  2. Edit ~/.claude/CLAUDE.local.md      — note machine-specific environment"
+echo "  3. Run ~/.claude/scripts/seed-memory.sh from any project root to init memory"
+echo "  4. Run ~/.claude/scripts/install-repo-hooks.sh in repos that need lint hooks"
