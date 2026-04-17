@@ -9,3 +9,6 @@
 *secret*
 *.pem
 *.key
+
+# vscode
+.vscode/
