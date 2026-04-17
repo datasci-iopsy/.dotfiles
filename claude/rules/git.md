@@ -1,5 +1,7 @@
 # Git Workflow
 
+- Never include session links (`https://claude.ai/code/session_*`) in PR titles, bodies, or descriptions. Sessions are deleted frequently and the links rot.
+
 - Task branches: `<base>--claude-<topic>` naming convention.
 - Always create new commits. Never amend unless explicitly asked.
 - Never force-push. Never skip hooks (--no-verify).
