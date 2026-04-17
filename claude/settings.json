@@ -50,7 +50,7 @@
             "Bash(ALLOW_LOCK_COMMIT=1 git commit*)"
         ],
         "defaultMode": "default",
-        "disableAutoMode": "disable" // auto enabled for Version: 2.1.92
+        "disableAutoMode": "disable"
     },
     "hooks": {
         "UserPromptSubmit": [
