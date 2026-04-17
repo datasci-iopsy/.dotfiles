@@ -6,7 +6,7 @@
 #
 # Usage:
 #   cd /path/to/repo
-#   bash ~/.claude/install-repo-hooks.sh
+#   bash ~/.claude/scripts/install-repo-hooks.sh
 
 set -euo pipefail
 
