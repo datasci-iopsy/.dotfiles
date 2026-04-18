@@ -49,7 +49,10 @@ if echo "$prompt" | grep -qE 'Verify each finding against the current code|coder
     fi
 
     # Inject prior session changes if any fixes have been applied this session
-    log_entries=$(grep -c '^## fix-' "$SESSION_LOG" 2>/dev/null || echo "0")
+    log_entries=0
+    if [[ -f "$SESSION_LOG" ]]; then
+        log_entries=$(grep -c '^## fix-' "$SESSION_LOG") || log_entries=0
+    fi
     if [[ "$log_entries" -gt 0 ]]; then
         echo "[CodeRabbit session context -- prior changes this session]"
         cat "$SESSION_LOG"
