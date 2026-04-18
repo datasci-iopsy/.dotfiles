@@ -37,6 +37,11 @@ case "$TOOL" in
         exit 0
         ;;
       *)
+        # CodeRabbit surgeon spawns: bounded, Sonnet, surgical edits only — pass through
+        if echo "$DESC" | grep -qE '^Fix CR-[0-9]+'; then
+          echo "[cost] code-surgeon (~2k-8k tokens, Sonnet) — $DESC" >&2
+          exit 0
+        fi
         # General-purpose agents are unbounded — gate these
         if   [ "$CHARS" -gt 3000 ]; then TIER="VERY HIGH"; RANGE="50k-150k tokens"
         elif [ "$CHARS" -gt 1000 ]; then TIER="HIGH";      RANGE="15k-80k tokens"

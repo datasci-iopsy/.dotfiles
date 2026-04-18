@@ -43,7 +43,10 @@ Before acting, rate this finding 1-5:
   1-2  False positive or nitpick -- dismiss, one-line rationale, no edit.
   3    Judgment call -- do NOT fix; append finding + your assessment to
        ~/.claude/coderabbit-deferred.md; report "Deferred: <one-line summary>".
-  4-5  Real defect -- verify against current code, fix, report tersely.
+  4-5  Real defect -- spawn the code-surgeon agent to apply the fix.
+       Use subagent_type "general-purpose", description "Fix CR-<N>: <one-line summary>",
+       and pass the finding location and expected fix in the prompt.
+       Do not fix inline. Do not spawn any other agent type.
 EOF
 fi
 

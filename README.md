@@ -165,6 +165,7 @@ Specialized sub-agents in `claude/agents/` are available to spawn as focused wor
 
 - `code-reviewer.md` — reviews diffs for correctness, style, and security. Read/Grep/Glob only.
 - `security-auditor.md` — checks for credential exposure, injection risks, insecure patterns. Read/Grep/Glob only.
+- `code-surgeon.md` — applies surgical fixes from CodeRabbit triage (rated 4-5). Read/Grep/Glob/Edit only. Spawned per finding with description `Fix CR-<N>: ...`; passes cost-guard automatically.
 
 ---
 
