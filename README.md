@@ -28,7 +28,8 @@ Personal dotfiles for Claude Code. Managed via symlinks — `install.sh` sets ev
     │   └── core.md                     Core principles, workflow, sub-agent usage
     ├── commands/                       → ~/.claude/commands/  Custom slash commands
     │   ├── seed-project.md             /seed-project — init memory for current project
-    │   └── install-hooks.md            /install-hooks — add pre-commit hooks to current repo
+    │   ├── install-hooks.md            /install-hooks — add pre-commit hooks to current repo
+    │   └── coderabbit-fix.md           /coderabbit-fix — process deferred CodeRabbit findings, fix, and commit
     ├── skills/                         → ~/.claude/skills/  Auto-triggered skills (lazy-loaded)
     │   └── ...                         10 custom skills (see Skills section)
     ├── agents/                         → ~/.claude/agents/  Specialized sub-agents
@@ -126,6 +127,18 @@ Custom skills live in `claude/skills/`. Each skill is a directory with a `SKILL.
 See [`claude/skills/README.md`](claude/skills/README.md) for trigger conditions and full skill reference.
 
 Current skills: `anaiis-agents`, `anaiis-changelog`, `anaiis-copyedit`, `anaiis-docaudit`, `anaiis-duckdb`, `anaiis-litreview`, `anaiis-peerreview`, `anaiis-preflight`, `anaiis-gitrebase`, `graphify`
+
+---
+
+## Commands
+
+Custom slash commands in `claude/commands/` are symlinked to `~/.claude/commands/`. Invoke with `/command-name` in Claude Code.
+
+| Command | What it does |
+|---|---|
+| `/seed-project` | Init per-project memory files from templates |
+| `/install-hooks` | Add R lint and Python ruff pre-commit hooks to a repo |
+| `/coderabbit-fix` | Process deferred CodeRabbit findings, fix real defects, and commit by logical group. Pass `--review` to gate commits through the `code-reviewer` agent first |
 
 ---
 
