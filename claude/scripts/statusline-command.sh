@@ -77,10 +77,17 @@ shorten_model() {
 }
 
 # 12345 → "12k",  999 → "999"
+# < 1000 → raw ("400"), 1000–9999 → one decimal if non-zero ("1.5k"), else whole ("6k")
 fmt_k() {
     local n=${1:-0}
     if [ "$n" -ge 1000 ] 2>/dev/null; then
-        printf '%dk' "$(( n / 1000 ))"
+        local whole=$(( n / 1000 ))
+        local frac=$(( (n % 1000) / 100 ))   # first decimal digit
+        if [ "$frac" -gt 0 ]; then
+            printf '%d.%dk' "$whole" "$frac"
+        else
+            printf '%dk' "$whole"
+        fi
     else
         printf '%d' "$n"
     fi
@@ -147,7 +154,7 @@ fi
 # ── Token counts: input + output ──────────────────────────────────────────────
 if [ "${in_tok:-0}"  -gt 0 ] 2>/dev/null &&
    [ "${out_tok:-0}" -gt 0 ] 2>/dev/null; then
-    segs+=("$(printf "${b_grn}${dim}%s${b_wht}${dim}+%s${rs}" \
+    segs+=("$(printf "${dim}tok:${rs}${b_grn}${dim}%s${b_wht}${dim}+%s${rs}" \
         "$(fmt_k "$in_tok")" "$(fmt_k "$out_tok")")")
 fi
 
