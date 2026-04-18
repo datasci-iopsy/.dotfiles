@@ -6,7 +6,7 @@
 # Bypass: SKIP_RUFF=1 git commit
 #
 # Usage in pre-commit hook:
-#   bash "$HOME/.claude/ruff-lint-staged.sh"
+#   bash "$HOME/.claude/scripts/ruff-lint-staged.sh"
 
 set -euo pipefail
 

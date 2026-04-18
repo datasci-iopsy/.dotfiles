@@ -6,7 +6,7 @@
 # Bypass: SKIP_R_LINT=1 git commit
 #
 # Usage in pre-commit hook:
-#   bash "$HOME/.claude/r-lint-staged.sh"
+#   bash "$HOME/.claude/scripts/r-lint-staged.sh"
 
 set -euo pipefail
 
