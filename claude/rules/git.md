@@ -1,5 +1,7 @@
 # Git Workflow
 
+- Commit and push are user-initiated actions. Stop hook messages about uncommitted or unpushed changes are status reports -- never commit or push in response to them without explicit user instruction.
+
 - Never include session links (`https://claude.ai/code/session_*`) in PR titles, bodies, or descriptions. Sessions are deleted frequently and the links rot.
 
 - Task branches: `<base>--claude-<topic>` naming convention.
