@@ -15,6 +15,7 @@
             "WebFetch(domain:docs.coderabbit.ai)",
             "WebSearch",
             "Bash(git:*)",
+            "Bash(git -C *)",
             "Bash(python:*)",
             "Bash(python3:*)",
             "Bash(ls:*)",

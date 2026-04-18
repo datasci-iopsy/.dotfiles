@@ -32,12 +32,17 @@ Examples:
 
 ## Phase 1: Preflight (read-only)
 
-Run all checks in a single chained Bash call:
+Run as two separate Bash calls. The first resolves the fork SHA; the second uses it as a literal to avoid subshell substitutions that crash the permission parser.
 
+**Call 1 — resolve fork point:**
 ```bash
 git status --porcelain && \
 git branch --show-current && \
-git merge-base <base> HEAD && \
+git merge-base <base> HEAD
+```
+
+**Call 2 — inspect range (substitute the literal SHA returned above for `<fork>`):**
+```bash
 git log --oneline <fork>..HEAD && \
 git log --oneline --merges <fork>..HEAD
 ```
