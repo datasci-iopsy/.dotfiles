@@ -55,4 +55,11 @@ if [[ -n "$current_branch" ]]; then
   fi
 fi
 
+# Remind if deferred CodeRabbit findings exist
+DEFERRED="$HOME/.claude/coderabbit-deferred.md"
+if [[ -f "$DEFERRED" ]] && grep -qv '^#' "$DEFERRED" 2>/dev/null && grep -q '[^[:space:]]' "$DEFERRED" 2>/dev/null; then
+    count=$(grep -c '^## ' "$DEFERRED" 2>/dev/null || echo "some")
+    echo "Status: $count deferred CodeRabbit finding(s) in ~/.claude/coderabbit-deferred.md" >&2
+fi
+
 exit 0

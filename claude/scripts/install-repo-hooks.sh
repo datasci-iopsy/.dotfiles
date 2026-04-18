@@ -10,8 +10,8 @@
 
 set -euo pipefail
 
-HOOK_DIR="$(git rev-parse --git-dir 2>/dev/null)/hooks"
-if [ $? -ne 0 ] || [ -z "$HOOK_DIR" ]; then
+HOOK_DIR="$(git rev-parse --git-dir 2>/dev/null || true)/hooks"
+if [ -z "$HOOK_DIR" ] || [ "$HOOK_DIR" = "/hooks" ]; then
     echo "ERROR: not inside a git repository." >&2
     exit 1
 fi
