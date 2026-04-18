@@ -21,7 +21,16 @@ Context validation (run before any edit):
   caller identified in step 2. A caller is "already addressed" only if it meets one of:
   (1) modified within the same patch or session that introduces the signature change,
   (2) explicitly listed in the PR/prompt as an already-updated caller, or
-  (3) its existing code is already compatible with the new signature (compiles/runs as-is).
+  (3) static checks (Read, Grep, Glob only — no Bash, no compilation) confirm the callers
+      identified in step 2 are already compatible with the new signature. Callers satisfy
+      condition (3) when ALL of the following hold: the exported symbol name at every call
+      site still matches the new name; argument arity at the call site matches the new
+      signature, or the new signature uses rest/optional parameters or defaults that cover
+      the existing call; the call site does not destructure or inspect a return value whose
+      shape has changed; and where type annotations are present (TypeScript, Flow, Python
+      type hints), the annotated types are structurally compatible with the new signature.
+      A caller is also compatible under condition (3) if a trivial adapter or shim is
+      present at the call site that preserves the old interface.
   Any caller that meets none of these three conditions is unaddressed. If unaddressed
   callers exist, report "Blocked: <reason>. Callers at <files> need attention first."
   Do not apply the fix silently in this case.
@@ -32,7 +41,7 @@ Editing rules:
 - Apply the smallest possible change that resolves the finding. One logical edit, nothing more.
 - Do not refactor surrounding code, rename variables, add comments, or touch unrelated lines.
 - Do not add error handling beyond what the finding specifically requires.
-- One Edit call per logical fix. If the same issue appears in multiple locations in the same file, fix all instances in that single Edit call as one atomic change.
+- Use one Edit call per file that contains the issue and fix all instances of the same issue in that file atomically.
 
 Reporting:
 - Report the result in one line: "Fixed: <what> at <file>:<line>" or "Already resolved: <file>:<line>" or "Blocked: <reason>. Callers at <files>."
