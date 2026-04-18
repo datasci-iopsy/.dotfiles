@@ -1,3 +1,8 @@
+---
+name: anaiis-litreview
+description: Literature review or research synthesis tasks that reference the local references catalog
+---
+
 # Literature Review
 
 Conduct a focused literature review on a topic or subdirectory of the references collection.

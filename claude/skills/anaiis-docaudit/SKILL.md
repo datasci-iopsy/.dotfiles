@@ -1,3 +1,8 @@
+---
+name: anaiis-docaudit
+description: Audit documentation files for accuracy against the current project state
+---
+
 # Documentation Audit
 
 Audit documentation files for accuracy against the current project state.

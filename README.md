@@ -38,6 +38,7 @@ Personal dotfiles for Claude Code. Managed via symlinks — `install.sh` sets ev
     │   ├── cost-guard.sh               PreToolUse: Agent/WebFetch cost transparency
     │   ├── post-edit-lint.sh           PostToolUse: Edit/Write lint (py/sh/R)
     │   ├── maintenance-check.sh        UserPromptSubmit: plan/session maintenance reminders
+    │   ├── coderabbit-triage.sh        UserPromptSubmit: CodeRabbit review triage
     │   └── stop-hook-git-check.sh      Stop: enforce clean git state before session end
     ├── scripts/                        → ~/.claude/scripts/  Utility scripts
     │   ├── statusline-command.sh       Status bar generator (model, ctx%, tokens, cache, rate limits)
@@ -176,6 +177,7 @@ Hooks are configured in `claude/settings.json`. Scripts live in `claude/hooks/` 
 | Event | Matcher | Script | Behavior |
 |---|---|---|---|
 | `UserPromptSubmit` | — | `maintenance-check.sh` | Weekly plan check (>10 files or >14 days old); monthly session storage check (>50 MB) |
+| `UserPromptSubmit` | — | `coderabbit-triage.sh` | CodeRabbit review triage |
 | `PostToolUse` | `Edit\|Write` | `post-edit-lint.sh` | `.py`: ruff check + ruff format; `.sh`: shellcheck; `.R/.r`: lintr |
 | `PreToolUse` | `Write\|Edit` | inline | Blocks writes to `*.lock`, `*.env`, `*credentials*`, `*secret*`, `*.pem`, `*.key` |
 | `PreToolUse` | `Bash` | inline | Blocks destructive bq/gcloud/uv commands; warns on Python JSON parsing |
@@ -200,7 +202,7 @@ Use the `update-config` skill to merge new hooks safely into `settings.json`.
 | `git commit` | `r-lint-staged.sh` | Blocks commit if violations exist |
 | PR | CodeRabbit | Reviews against R conventions in CLAUDE.md |
 
-**Config:** `~/.lintr` (symlinked from `.dotfiles/.lintr`) — 17 tidyverse rules + native `|>` pipe.
+**Config:** `~/.lintr` (symlinked from `.dotfiles/.lintr`) — 17 linters (including native `|>` pipe enforcement via `pipe_consistency_linter`).
 
 **Per-project override:** add `.lintr` in the project root; lintr walks up to find the nearest config.
 

@@ -1,3 +1,8 @@
+---
+name: anaiis-changelog
+description: Generate a changelog or release notes from the current branch diff for PR preparation
+---
+
 # Changelog
 
 Generate a concise summary of changes on the current branch for PR preparation.
