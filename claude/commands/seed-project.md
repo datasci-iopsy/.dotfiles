@@ -1,7 +1,7 @@
 Initialize Claude memory files for the current project.
 
 Run `bash ~/.claude/scripts/seed-memory.sh` from the project root. This creates
-`~/.claude/projects/<encoded-path>/memory/` with six starter files:
+`~/.claude/projects/<encoded-path>/memory/` with seven starter files:
 
 - `MEMORY.md` — index
 - `user_profile.md` — role, expertise, interaction style

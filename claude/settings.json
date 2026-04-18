@@ -61,6 +61,14 @@
                         "command": "bash $HOME/.claude/hooks/maintenance-check.sh"
                     }
                 ]
+            },
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash $HOME/.claude/hooks/coderabbit-triage.sh"
+                    }
+                ]
             }
         ],
         "PostToolUse": [
