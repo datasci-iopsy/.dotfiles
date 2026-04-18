@@ -126,7 +126,7 @@ Custom skills live in `claude/skills/`. Each skill is a directory with a `SKILL.
 
 See [`claude/skills/README.md`](claude/skills/README.md) for trigger conditions and full skill reference.
 
-Current skills: `anaiis-agents`, `anaiis-changelog`, `anaiis-copyedit`, `anaiis-docaudit`, `anaiis-duckdb`, `anaiis-litreview`, `anaiis-peerreview`, `anaiis-preflight`, `anaiis-gitrebase`, `graphify`
+Current skills: `anaiis-agents`, `anaiis-changelog`, `anaiis-copyedit`, `anaiis-docaudit`, `anaiis-duckdb`, `anaiis-gitpr`, `anaiis-litreview`, `anaiis-peerreview`, `anaiis-preflight`, `anaiis-gitrebase`, `graphify`
 
 ---
 

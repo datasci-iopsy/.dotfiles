@@ -141,6 +141,20 @@ Custom skills use the `anaiis-` namespace prefix to avoid collisions. Externally
 
 ---
 
+### `anaiis-gitpr`
+
+**Trigger:** The user wants to open a pull request after completing CodeRabbit triage and commit cleanup.
+
+**What it does:** Checks for an existing PR, infers the base branch (parent feature branch or main), generates a structured PR body from the git log, writes it to a temp file to avoid shell quoting issues, and creates the PR via `gh pr create` with self-assignment (`@me`). Does not add reviewers, labels, or projects.
+
+**Key rules:**
+- Never use `--json` with `gh pr create` (not a valid flag; use `gh pr list --json` to check for existing PRs)
+- Always write the PR body to a temp file with `--body-file` to handle multiline content and `#` characters safely
+- Infer base branch from the naming convention: `feat/xxx--claude-topic` bases to `feat/xxx`; all others base to `main`
+- Self-assigns with `--assignee @me`; reviewers are managed by the user per project
+
+---
+
 ## How skills work
 
 Skills are Markdown files with YAML frontmatter loaded by Claude Code from `~/.claude/skills/`. The `description` field is the primary trigger signal -- Claude matches it against the current task to decide whether to activate the skill.
