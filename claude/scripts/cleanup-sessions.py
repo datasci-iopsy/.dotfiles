@@ -121,6 +121,9 @@ def scan_sessions(older_than_days: int | None = None) -> list[dict]:
     sessions = []
     cutoff = (time.time() - older_than_days * 86400) if older_than_days else None
 
+    if not CLAUDE_DIR.exists() or not CLAUDE_DIR.is_dir():
+        return sessions
+
     for project_dir in sorted(CLAUDE_DIR.iterdir()):
         if not project_dir.is_dir():
             continue
