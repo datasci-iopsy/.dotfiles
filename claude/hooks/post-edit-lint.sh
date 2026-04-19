@@ -30,6 +30,18 @@ case "$FILE" in
     fi
     ;;
 
+  *.json)
+    if command -v jq &>/dev/null; then
+      formatted=$(jq --indent 4 . "$FILE" 2>&1)
+      if [[ $? -eq 0 ]]; then
+        echo "$formatted" > "$FILE"
+        echo "[lint] json: formatted $FILE with 4-space indent" >&2
+      else
+        echo "[lint] json: parse error in $FILE -- $formatted" >&2
+      fi
+    fi
+    ;;
+
   *.R|*.r)
     if ! command -v Rscript &>/dev/null; then
       exit 0
