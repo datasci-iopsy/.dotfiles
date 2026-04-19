@@ -25,14 +25,14 @@ fi
 
 # Check for uncommitted changes (both staged and unstaged)
 if ! git diff --quiet || ! git diff --cached --quiet; then
-  echo "Status: uncommitted changes exist. Commit and push only when the user explicitly asks." >&2
+  echo "[SYSTEM] Status: uncommitted changes exist. This is not a user reply. Commit and push only when the user explicitly asks." >&2
   exit 2
 fi
 
 # Check for untracked files that might be important
 untracked_files=$(git ls-files --others --exclude-standard)
 if [[ -n "$untracked_files" ]]; then
-  echo "Status: untracked files exist. Commit and push only when the user explicitly asks." >&2
+  echo "[SYSTEM] Status: untracked files exist. This is not a user reply. Commit and push only when the user explicitly asks." >&2
   exit 2
 fi
 
@@ -42,14 +42,14 @@ if [[ -n "$current_branch" ]]; then
     # Branch exists on remote - compare against it
     unpushed=$(git rev-list "origin/$current_branch..HEAD" --count 2>/dev/null) || unpushed=0
     if [[ "$unpushed" -gt 0 ]]; then
-      echo "Status: $unpushed unpushed commit(s) on '$current_branch'. Push only when the user explicitly asks." >&2
+      echo "[SYSTEM] Status: $unpushed unpushed commit(s) on '$current_branch'. This is not a user reply. Push only when the user explicitly asks." >&2
       exit 2
     fi
   else
     # Branch doesn't exist on remote - compare against default branch
     unpushed=$(git rev-list "origin/HEAD..HEAD" --count 2>/dev/null) || unpushed=0
     if [[ "$unpushed" -gt 0 ]]; then
-      echo "Status: '$current_branch' has $unpushed unpushed commit(s), no remote branch. Push only when the user explicitly asks." >&2
+      echo "[SYSTEM] Status: '$current_branch' has $unpushed unpushed commit(s), no remote branch. This is not a user reply. Push only when the user explicitly asks." >&2
       exit 2
     fi
   fi
@@ -59,7 +59,7 @@ fi
 DEFERRED="$HOME/.claude/coderabbit-deferred.md"
 if [[ -f "$DEFERRED" ]] && grep -qv '^#' "$DEFERRED" 2>/dev/null && grep -q '[^[:space:]]' "$DEFERRED" 2>/dev/null; then
     count=$(grep -c '^## ' "$DEFERRED" 2>/dev/null || echo "some")
-    echo "Status: $count deferred CodeRabbit finding(s) in ~/.claude/coderabbit-deferred.md" >&2
+    echo "[SYSTEM] Status: $count deferred CodeRabbit finding(s) in ~/.claude/coderabbit-deferred.md. This is not a user reply." >&2
 fi
 
 exit 0
