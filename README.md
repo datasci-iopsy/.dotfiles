@@ -66,7 +66,7 @@ Personal dotfiles for Claude Code. Managed via symlinks — `install.sh` sets ev
 ### 1. Clone the repo
 
 ```bash
-git clone git@github.com:datasci-iopsy/dotfiles.git ~/.dotfiles
+git clone git@github.com:datasci-iopsy/.dotfiles.git ~/.dotfiles
 ```
 
 ### 2. Clear any conflicting real files
@@ -216,7 +216,7 @@ Use the `update-config` skill to merge new hooks safely into `settings.json`.
 | `git commit` | `r-lint-staged.sh` | Blocks commit if violations exist |
 | PR | CodeRabbit | Reviews against R conventions in CLAUDE.md |
 
-**Config:** `~/.lintr` (symlinked from `.dotfiles/.lintr`) — 17 linters (including native `|>` pipe enforcement via `pipe_consistency_linter`).
+**Config:** `~/.lintr` (symlinked from `.dotfiles/.lintr`) — 17 enabled linters (3 disabled via `= NULL`; 20 total definitions), including native `|>` pipe enforcement via `pipe_consistency_linter`.
 
 **Per-project override:** add `.lintr` in the project root; lintr walks up to find the nearest config.
 
