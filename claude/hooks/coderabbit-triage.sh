@@ -24,6 +24,10 @@ DEFERRED="$HOME/.claude/coderabbit-deferred.md"
 SESSION_LOG="$HOME/.claude/coderabbit-session-log.md"
 STAMP_DIR="$HOME/.claude"
 
+if ! command -v jq &>/dev/null; then
+  exit 0
+fi
+
 input=$(cat)
 prompt=$(echo "$input" | jq -r '.prompt // empty')
 session_id=$(echo "$input" | jq -r '.session_id // empty')

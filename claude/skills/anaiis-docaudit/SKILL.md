@@ -8,7 +8,19 @@ description: Audit documentation files for accuracy against the current project 
 Audit documentation files for accuracy against the current project state.
 
 ## Scope
-$ARGUMENTS — optional path or glob pattern. Defaults to all `README.md` and `CLAUDE.md` files in the repo.
+$ARGUMENTS — optional path or glob pattern. Defaults to all of the following files anywhere in the repo:
+
+- `README.md`, `README`, `README.txt`
+- `CLAUDE.md`
+- `AGENTS.md`
+- `CONTRIBUTING.md`, `CONTRIBUTING`
+- `LICENSE`, `LICENSE.md`, `LICENSE.txt`
+- `CHANGELOG.md`, `CHANGELOG`, `CHANGES.md`, `CHANGES`
+- `SECURITY.md`
+- `CODEOWNERS`
+- `Makefile`, `makefile`, `GNUmakefile`
+
+Use `Glob` with each pattern to discover files; collect all matches before beginning audits. Skip binary LICENSE files (check with `file` if uncertain).
 
 ## Tool usage (required — do not deviate)
 
@@ -47,6 +59,13 @@ For each documentation file in scope:
 
 ### 5. Stale content
 - Flag sections describing removed features, completed migrations, or deprecated workflows — identified by cross-referencing doc claims against what Glob/Grep finds in the actual codebase
+
+### 6. Makefile-specific audit (Makefile, makefile, GNUmakefile only)
+- **Target inventory**: use `Grep` with pattern `^[a-zA-Z0-9_-]+:` to extract all defined targets
+- **Help text accuracy**: use `Grep` to find a `help` target or `@echo` / `@printf` lines that describe targets; verify each named target in the help output is actually defined
+- **`.PHONY` consistency**: extract `.PHONY` declarations and confirm every listed name matches a defined target; flag names declared `.PHONY` that have no corresponding target, and targets that should be `.PHONY` (no output file) but are not declared
+- **Path references in recipes**: use `Grep` to find file path references in recipes (strings containing `/` or file extensions); use `Glob` to verify each exists
+- **Variable references**: flag variables used in recipes that are not defined in the Makefile and have no obvious environment source (check for `?=` / `:=` / `=` definitions via `Grep`)
 
 ## Output
 

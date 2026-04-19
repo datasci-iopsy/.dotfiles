@@ -15,6 +15,11 @@
 #   Agent (Explore/Plan)           = ~2k-25k tokens (bounded research task)
 #   Agent (general-purpose)        = ~10k-100k tokens (open-ended, unbounded)
 
+if ! command -v jq &>/dev/null; then
+  echo "[cost-guard] jq not found -- all agent spawns ungated. Install: brew install jq" >&2
+  exit 0
+fi
+
 INPUT=$(cat)
 TOOL=$(jq -r '.tool_name // empty' 2>/dev/null <<< "$INPUT")
 

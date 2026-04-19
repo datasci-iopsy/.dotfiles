@@ -15,11 +15,17 @@ FILE=$(jq -r '.tool_input.file_path // empty' 2>/dev/null <<< "$INPUT")
 case "$FILE" in
 
   *.py)
+    RUFF=""
     if command -v ruff &>/dev/null; then
+      RUFF="ruff"
+    elif [[ -x "$HOME/.local/bin/ruff" ]]; then
+      RUFF="$HOME/.local/bin/ruff"
+    fi
+    if [[ -n "$RUFF" ]]; then
       echo "[lint] ruff check: $FILE" >&2
-      ruff check --quiet "$FILE" 2>&1 | head -5
+      $RUFF check --quiet "$FILE" 2>&1 | head -5
       echo "[lint] ruff format: $FILE" >&2
-      ruff format --quiet "$FILE" 2>&1
+      $RUFF format --quiet "$FILE" 2>&1
     fi
     ;;
 
@@ -27,6 +33,18 @@ case "$FILE" in
     if command -v shellcheck &>/dev/null; then
       echo "[lint] shellcheck: $FILE" >&2
       shellcheck --severity=warning "$FILE" 2>&1 | head -5
+    fi
+    ;;
+
+  *.json)
+    if command -v jq &>/dev/null; then
+      formatted=$(jq --indent 4 . "$FILE" 2>&1)
+      if [[ $? -eq 0 ]]; then
+        echo "$formatted" > "$FILE"
+        echo "[lint] json: formatted $FILE with 4-space indent" >&2
+      else
+        echo "[lint] json: parse error in $FILE -- $formatted" >&2
+      fi
     fi
     ;;
 
