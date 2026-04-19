@@ -20,7 +20,14 @@ done < <(git diff --cached --name-only)
 
 [ ${#PY_FILES[@]} -eq 0 ] && exit 0
 
-if ! command -v ruff &>/dev/null; then
+RUFF=""
+if command -v ruff &>/dev/null; then
+    RUFF="ruff"
+elif [[ -x "$HOME/.local/bin/ruff" ]]; then
+    RUFF="$HOME/.local/bin/ruff"
+fi
+
+if [[ -z "$RUFF" ]]; then
     echo "[ruff] ruff not found -- skipping Python lint" >&2
     exit 0
 fi
@@ -30,14 +37,14 @@ echo "[ruff] Checking ${#PY_FILES[@]} staged Python file(s)..."
 FAILED=0
 
 # Lint check
-if ! ruff check "${PY_FILES[@]}" 2>&1; then
+if ! $RUFF check "${PY_FILES[@]}" 2>&1; then
     echo ""
     echo "[ruff] Fix lint issues above before committing."
     FAILED=1
 fi
 
 # Format check (does not auto-fix -- keeps staged state clean)
-if ! ruff format --check "${PY_FILES[@]}" 2>&1; then
+if ! $RUFF format --check "${PY_FILES[@]}" 2>&1; then
     echo ""
     echo "[ruff] Format issues found. Run: ruff format ${PY_FILES[*]}"
     FAILED=1

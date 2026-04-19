@@ -2,6 +2,7 @@
 
 - Use `gh` for all GitHub operations (PRs, issues, checks) — never raw curl to the API.
 - Use `jq` for JSON processing in shell.
+- Use `duckdb` CLI as the default engine for querying local parquet, CSV, JSON, and Excel files. Never load these into pandas for ad hoc analysis. Pass `-json` for machine-readable output.
 - Use `gcloud` for GCP operations (read-only unless user confirms).
 - Prefer `make` targets over raw commands when a Makefile exists.
 - Check for project and subdirectory CLAUDE.md files before starting work.

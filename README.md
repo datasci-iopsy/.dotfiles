@@ -250,9 +250,40 @@ Per-project memory at `~/.claude/projects/<encoded-path>/memory/`. Seeded from `
 
 ---
 
-## Per-machine setup (Python CLI tools)
+## Per-machine setup (global CLI tools)
 
-`install.sh` handles symlinks only. Python tools must be installed per machine:
+`install.sh` handles symlinks only. The following tools must be installed per machine. All hooks, scripts, and skills depend on them being available on PATH or at their standard install locations.
+
+### Homebrew tools
+
+```bash
+brew install gh jq shellcheck pyenv
+```
+
+| Tool | Used for |
+|---|---|
+| `gh` | GitHub operations (PRs, issues, checks) |
+| `jq` | JSON processing in hooks and scripts |
+| `shellcheck` | Shell lint in post-edit hook |
+| `pyenv` | Python version management |
+
+### uv (Python toolchain + global tools)
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Install global Python tools via uv. These land at `~/.local/bin/` and are available to all hooks and pre-commit scripts regardless of which project venv is active:
+
+```bash
+uv tool install ruff
+```
+
+| Tool | Used for |
+|---|---|
+| `ruff` | Python lint/format in post-edit hook and pre-commit |
+
+### Python CLI tools (pipx)
 
 ```bash
 # Bootstrap pipx under the tools Python

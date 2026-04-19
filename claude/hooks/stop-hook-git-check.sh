@@ -4,9 +4,11 @@
 input=$(cat)
 
 # Check if stop hook is already active (recursion prevention)
-stop_hook_active=$(echo "$input" | jq -r '.stop_hook_active')
-if [[ "$stop_hook_active" = "true" ]]; then
-  exit 0
+if command -v jq &>/dev/null; then
+  stop_hook_active=$(echo "$input" | jq -r '.stop_hook_active')
+  if [[ "$stop_hook_active" = "true" ]]; then
+    exit 0
+  fi
 fi
 
 # Check if we're in a git repository - bail if not
