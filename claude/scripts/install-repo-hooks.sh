@@ -2,7 +2,7 @@
 # install-repo-hooks.sh -- add standard hooks to the current git repo
 #
 # Run once from any project root after cloning on a new machine.
-# Safe to re-run -- skips anything already in place.
+# Safe to re-run -- migrates stale direct-path hooks automatically.
 #
 # Usage:
 #   cd /path/to/repo
@@ -17,50 +17,79 @@ if [ -z "$HOOK_DIR" ] || [ "$HOOK_DIR" = "/hooks" ]; then
 fi
 
 HOOK_FILE="$HOOK_DIR/pre-commit"
-R_LINT_LINE='bash "$HOME/.claude/scripts/r-lint-staged.sh"'
-RUFF_LINT_LINE='bash "$HOME/.claude/scripts/ruff-lint-staged.sh"'
-SHEBANG='#!/usr/bin/env bash'
 
-# --- Create or update pre-commit hook ---
+# Marker strings used to detect hook state
+DISPATCHER_MARKER='repo-pre-commit.sh'
+STALE_MARKER='lint-staged.sh'
+
+# The single line repos call (path never changes)
+DISPATCHER_LINE='bash "$HOME/.claude/hooks/repo-pre-commit.sh"'
+
+# ---------------------------------------------------------------------------
+# _migrate: replace old direct-path lint lines with the dispatcher call.
+# Preserves all other hook content (e.g. repo-specific lock file guards).
+# ---------------------------------------------------------------------------
+_migrate() {
+    local hook="$1"
+    local tmp
+    tmp=$(mktemp)
+
+    # Strip old lint lines and their dotfiles-added comments; keep everything else
+    awk '
+        /# R style lint \(added by install-repo-hooks\.sh\)/ { next }
+        /# Python ruff lint \(added by install-repo-hooks\.sh\)/ { next }
+        /# -+ R style lint.*-+/ { next }
+        /r-lint-staged\.sh/ { next }
+        /ruff-lint-staged\.sh/ { next }
+        { print }
+    ' "$hook" > "$tmp"
+
+    # Collapse runs of 3+ blank lines left by removal down to one blank line
+    awk 'BEGIN{blank=0} /^[[:space:]]*$/{blank++; if(blank<=1) print; next} {blank=0; print}' \
+        "$tmp" > "${tmp}.2"
+
+    # Inject dispatcher after the shebang line (line 1)
+    awk -v line="$DISPATCHER_LINE" '
+        NR == 1 { print; print ""; print "# Dotfiles lint hooks (managed by ~/.dotfiles -- never edit this line)"; print line; next }
+        { print }
+    ' "${tmp}.2" > "$hook"
+
+    rm -f "$tmp" "${tmp}.2"
+}
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
 
 if [ ! -f "$HOOK_FILE" ]; then
     # No existing hook -- create a fresh one
-    cat > "$HOOK_FILE" << EOF
-$SHEBANG
+    cat > "$HOOK_FILE" << 'EOF'
+#!/usr/bin/env bash
 # Pre-commit hooks (managed by ~/.dotfiles)
+# To update: bash ~/.claude/scripts/install-repo-hooks.sh
 
-$R_LINT_LINE
-$RUFF_LINT_LINE
+# Dotfiles lint hooks (managed by ~/.dotfiles -- never edit this line)
+bash "$HOME/.claude/hooks/repo-pre-commit.sh"
 EOF
     chmod +x "$HOOK_FILE"
     echo "  created  $HOOK_FILE"
-else
-    # Hook exists -- check if R lint is already wired in
-    if grep -qF 'r-lint-staged.sh' "$HOOK_FILE"; then
-        echo "  ok       R lint already in $HOOK_FILE"
-    else
-        # Append after shebang line if it exists, otherwise append at end
-        if head -1 "$HOOK_FILE" | grep -q '^#!'; then
-            sed -i '' "1a\\
-\\
-# R style lint (added by install-repo-hooks.sh)\\
-$R_LINT_LINE
-" "$HOOK_FILE"
-        else
-            printf '\n# R style lint (added by install-repo-hooks.sh)\n%s\n' "$R_LINT_LINE" >> "$HOOK_FILE"
-        fi
-        echo "  updated  $HOOK_FILE (added R lint)"
-    fi
 
-    # Check if ruff lint is already wired in
-    if grep -qF 'ruff-lint-staged.sh' "$HOOK_FILE"; then
-        echo "  ok       ruff lint already in $HOOK_FILE"
-    else
-        printf '\n# Python ruff lint (added by install-repo-hooks.sh)\n%s\n' "$RUFF_LINT_LINE" >> "$HOOK_FILE"
-        echo "  updated  $HOOK_FILE (added ruff lint)"
-    fi
+elif grep -qF "$DISPATCHER_MARKER" "$HOOK_FILE"; then
+    echo "  ok       $HOOK_FILE (dispatcher already present)"
+
+elif grep -qF "$STALE_MARKER" "$HOOK_FILE"; then
+    # Migrate old direct-path references to the dispatcher
+    _migrate "$HOOK_FILE"
+    chmod +x "$HOOK_FILE"
+    echo "  migrated $HOOK_FILE (replaced direct-path lint calls with dispatcher)"
+
+else
+    # Hook exists but has no lint hooks -- append dispatcher
+    printf '\n# Dotfiles lint hooks (managed by ~/.dotfiles -- never edit this line)\n%s\n' \
+        "$DISPATCHER_LINE" >> "$HOOK_FILE"
+    echo "  updated  $HOOK_FILE (appended dispatcher)"
 fi
 
 echo ""
 echo "Done. Pre-commit hook active for this repo."
-echo "Bypass: SKIP_R_LINT=1 git commit ...  (R lint)  |  SKIP_RUFF=1 git commit ...  (Python)"
+echo "Bypass: SKIP_R_LINT=1 git commit   |   SKIP_RUFF=1 git commit"

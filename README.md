@@ -40,15 +40,17 @@ Personal dotfiles for Claude Code. Managed via symlinks — `install.sh` sets ev
     │   ├── post-edit-lint.sh           PostToolUse: Edit/Write lint (py/sh/R)
     │   ├── maintenance-check.sh        UserPromptSubmit: plan/session maintenance reminders
     │   ├── coderabbit-triage.sh        UserPromptSubmit: CodeRabbit review triage
-    │   └── stop-hook-git-check.sh      Stop: enforce clean git state before session end
+    │   ├── stop-hook-git-check.sh      Stop: enforce clean git state before session end
+    │   └── repo-pre-commit.sh          Stable dispatcher called by repo .git/hooks/pre-commit files
     ├── scripts/                        → ~/.claude/scripts/  Utility scripts
     │   ├── statusline-command.sh       Status bar generator (model, ctx%, tokens, cache, rate limits)
     │   ├── cleanup-sessions.py         → ~/.local/bin/claude-cleanup  Interactive session cleanup
     │   ├── clean-plans.sh              Interactive plan file cleanup
     │   ├── seed-memory.sh              Per-project memory bootstrapper
-    │   ├── install-repo-hooks.sh       One-command pre-commit hook installer for any repo
-    │   ├── r-lint-staged.sh            Pre-commit R lint (used by install-repo-hooks.sh)
-    │   └── ruff-lint-staged.sh         Pre-commit Python lint/format (used by install-repo-hooks.sh)
+    │   ├── install-repo-hooks.sh       Pre-commit hook installer; migrates stale hooks automatically
+    │   ├── audit-repo-hooks.sh         Finds repos with stale or missing dotfiles hook wiring
+    │   ├── r-lint-staged.sh            Pre-commit R lint (called via repo-pre-commit.sh dispatcher)
+    │   └── ruff-lint-staged.sh         Pre-commit Python lint/format (called via repo-pre-commit.sh dispatcher)
     └── memory-templates/               Template files for seed-memory.sh (not symlinked — copied per project)
         ├── MEMORY.md
         ├── user_profile.md
@@ -116,7 +118,13 @@ cd /path/to/project
 bash ~/.claude/scripts/install-repo-hooks.sh
 ```
 
-Adds R lint and Python ruff lint/format to `.git/hooks/pre-commit`. Safe to re-run.
+Stamps `.git/hooks/pre-commit` with a single call to the stable dispatcher (`repo-pre-commit.sh`). Safe to re-run — detects and migrates stale direct-path references automatically.
+
+To find repos that still have stale or missing hooks across all project directories:
+
+```bash
+bash ~/.claude/scripts/audit-repo-hooks.sh
+```
 
 ---
 
@@ -192,13 +200,25 @@ Hooks are configured in `claude/settings.json`. Scripts live in `claude/hooks/` 
 |---|---|---|---|
 | `UserPromptSubmit` | — | `maintenance-check.sh` | Weekly plan check (>10 files or >14 days old); monthly session storage check (>50 MB) |
 | `UserPromptSubmit` | — | `coderabbit-triage.sh` | CodeRabbit review triage |
-| `PostToolUse` | `Edit\|Write` | `post-edit-lint.sh` | `.py`: ruff check + ruff format; `.sh`: shellcheck; `.R/.r`: lintr |
+| `PostToolUse` | `Edit\|Write` | `post-edit-lint.sh` | `.py`: ruff check + ruff format; `.sh`: shellcheck; `.sql`: sqlfmt; `.R/.r`: lintr |
 | `PreToolUse` | `Write\|Edit` | inline | Blocks writes to `*.lock`, `*.env`, `*credentials*`, `*secret*`, `*.pem`, `*.key` |
 | `PreToolUse` | `Bash` | inline | Blocks destructive bq/gcloud/uv commands; warns on Python JSON parsing |
 | `PreToolUse` | `Agent\|WebFetch` | `cost-guard.sh` | Cost tiers MEDIUM/HIGH/VERY HIGH; informational for Explore/Plan, gated for general agents |
 | `Stop` | — | `stop-hook-git-check.sh` | Blocks session end if uncommitted changes or unpushed commits exist |
 
 All hooks exit 0 unless noted (sensitive file guard and destructive command guard exit 2 to block).
+
+### Repo pre-commit hooks
+
+Repos do not call lint scripts directly. Instead, `.git/hooks/pre-commit` calls a single stable dispatcher:
+
+```bash
+bash "$HOME/.claude/hooks/repo-pre-commit.sh"
+```
+
+The dispatcher (`claude/hooks/repo-pre-commit.sh`) delegates to `r-lint-staged.sh` and `ruff-lint-staged.sh`. When script paths change inside dotfiles, only the dispatcher needs updating — all repos pick up the change automatically without re-running the installer.
+
+**Maintenance pattern:** after any dotfiles restructuring that moves or renames scripts, update `repo-pre-commit.sh`, then run `audit-repo-hooks.sh` to confirm nothing is stale.
 
 ### Adding a hook
 
@@ -213,7 +233,7 @@ Use the `update-config` skill to merge new hooks safely into `settings.json`.
 | While typing in VS Code | `languageserver` + `lintr` | Inline squiggly underlines |
 | On save | `styler` via `formatOnSave` | Auto-fixes mechanical formatting |
 | Claude edits a `.R` file | `post-edit-lint.sh` | Reports violations to Claude |
-| `git commit` | `r-lint-staged.sh` | Blocks commit if violations exist |
+| `git commit` | `repo-pre-commit.sh` dispatcher → `r-lint-staged.sh` | Blocks commit if violations exist |
 | PR | CodeRabbit | Reviews against R conventions in CLAUDE.md |
 
 **Config:** `~/.lintr` (symlinked from `.dotfiles/.lintr`) — 17 enabled linters (3 disabled via `= NULL`; 20 total definitions), including native `|>` pipe enforcement via `pipe_consistency_linter`.
@@ -224,12 +244,30 @@ Use the `update-config` skill to merge new hooks safely into `settings.json`.
 
 ---
 
+## SQL Style Enforcement
+
+| When | Tool | What it does |
+|---|---|---|
+| Claude edits a `.sql` file | `post-edit-lint.sh` | Auto-applies sqlfmt in-place |
+
+**Style:** sqlfmt with `line_length=120`, no jinja formatting. sqlfmt is jinja-aware and preserves Jinja expressions without reformatting them — correct behavior for both dbt and non-dbt SQL.
+
+**Config:** in dbt projects, `[tool.sqlfmt]` in `pyproject.toml` takes precedence. For projects without that config block, the hook defaults to `--line-length 120`.
+
+**Availability:** installed globally via uv. The hook checks PATH then `~/.local/bin/sqlfmt`. Skips silently if not found.
+
+**Install:** `uv tool install shandy-sqlfmt` (no `[jinjafmt]` extra — jinja expressions are preserved as-is). In dbt projects that pin sqlfmt as a dev dependency, the project venv version takes precedence via PATH when the venv is active.
+
+**Bypass:** no bypass flag — sqlfmt auto-fixes and never blocks.
+
+---
+
 ## Python Style Enforcement
 
 | When | Tool | What it does |
 |---|---|---|
 | Claude edits a `.py` file | `post-edit-lint.sh` | `ruff check` (reported) + `ruff format` (auto-applied) |
-| `git commit` | `ruff-lint-staged.sh` | Blocks if lint errors or format drift exists |
+| `git commit` | `repo-pre-commit.sh` dispatcher → `ruff-lint-staged.sh` | Blocks if lint errors or format drift exists |
 
 **Per-project config:** `[tool.ruff]` in `pyproject.toml` or `ruff.toml`.
 
@@ -257,7 +295,7 @@ Per-project memory at `~/.claude/projects/<encoded-path>/memory/`. Seeded from `
 ### Homebrew tools
 
 ```bash
-brew install gh jq shellcheck pyenv
+brew install gh jq shellcheck pyenv ruff
 ```
 
 | Tool | Used for |
@@ -266,22 +304,25 @@ brew install gh jq shellcheck pyenv
 | `jq` | JSON processing in hooks and scripts |
 | `shellcheck` | Shell lint in post-edit hook |
 | `pyenv` | Python version management |
+| `ruff` | Python lint/format in post-edit hook and pre-commit |
 
-### uv (Python toolchain + global tools)
+### uv (Python toolchain)
+
+uv is used for Python-only tools not available in Homebrew. Install via Homebrew:
 
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
+brew install uv
 ```
 
-Install global Python tools via uv. These land at `~/.local/bin/` and are available to all hooks and pre-commit scripts regardless of which project venv is active:
+Then install global Python tools via uv. These land at `~/.local/bin/`:
 
 ```bash
-uv tool install ruff
+uv tool install shandy-sqlfmt
 ```
 
 | Tool | Used for |
 |---|---|
-| `ruff` | Python lint/format in post-edit hook and pre-commit |
+| `sqlfmt` | SQL format in post-edit hook (line_length=120, no jinja reformatting) |
 
 ### Python CLI tools (pipx)
 

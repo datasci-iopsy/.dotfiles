@@ -48,6 +48,29 @@ case "$FILE" in
     fi
     ;;
 
+  *.sql)
+    SQLFMT=""
+    if command -v sqlfmt &>/dev/null; then
+      SQLFMT="sqlfmt"
+    elif [[ -x "$HOME/.local/bin/sqlfmt" ]]; then
+      SQLFMT="$HOME/.local/bin/sqlfmt"
+    fi
+    if [[ -n "$SQLFMT" ]]; then
+      # Use project pyproject.toml config if present; otherwise default to line_length=120.
+      # Installed without [jinjafmt] extra: sqlfmt is jinja-aware but does not reformat
+      # jinja expressions -- correct for both dbt and non-dbt SQL.
+      if grep -qs '\[tool\.sqlfmt\]' pyproject.toml 2>/dev/null; then
+        echo "[lint] sqlfmt: $FILE (using project config)" >&2
+        $SQLFMT "$FILE" 2>&1
+      else
+        echo "[lint] sqlfmt: $FILE (line-length 120)" >&2
+        $SQLFMT --line-length 120 "$FILE" 2>&1
+      fi
+    else
+      echo "[lint] sqlfmt not found -- skipping SQL format" >&2
+    fi
+    ;;
+
   *.R|*.r)
     if ! command -v Rscript &>/dev/null; then
       exit 0
