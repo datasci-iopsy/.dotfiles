@@ -71,6 +71,14 @@
                         "command": "bash $HOME/.claude/hooks/coderabbit-triage.sh"
                     }
                 ]
+            },
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash $HOME/.claude/hooks/ensure-repo-hooks.sh"
+                    }
+                ]
             }
         ],
         "PostToolUse": [
