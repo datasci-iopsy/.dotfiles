@@ -31,17 +31,20 @@ Personal dotfiles for Claude Code. Managed via symlinks — `install.sh` sets ev
     │   ├── install-hooks.md            /install-hooks — add pre-commit hooks to current repo
     │   └── coderabbit-fix.md           /coderabbit-fix — process deferred CodeRabbit findings, fix, and commit
     ├── skills/                         → ~/.claude/skills/  Auto-triggered skills (lazy-loaded)
-    │   └── ...                         10 custom skills (see Skills section)
+    │   └── ...                         11 skills (see Skills section)
     ├── agents/                         → ~/.claude/agents/  Specialized sub-agents
     │   ├── code-reviewer.md            Code review agent (Sonnet, read-only tools)
-    │   └── security-auditor.md         Security audit agent (Sonnet, read-only tools)
+    │   ├── security-auditor.md         Security audit agent (Sonnet, read-only tools)
+    │   └── code-surgeon.md             Surgical fix agent (Sonnet, Read/Grep/Glob/Edit only)
     ├── hooks/                          → ~/.claude/hooks/  Hook scripts (referenced in settings.json)
     │   ├── cost-guard.sh               PreToolUse: Agent/WebFetch cost transparency
     │   ├── post-edit-lint.sh           PostToolUse: Edit/Write lint (py/sh/R)
     │   ├── maintenance-check.sh        UserPromptSubmit: plan/session maintenance reminders
     │   ├── coderabbit-triage.sh        UserPromptSubmit: CodeRabbit review triage
     │   ├── stop-hook-git-check.sh      Stop: enforce clean git state before session end
-    │   └── repo-pre-commit.sh          Stable dispatcher called by repo .git/hooks/pre-commit files
+    │   ├── repo-pre-commit.sh          Stable dispatcher called by repo .git/hooks/pre-commit files
+    │   ├── prefer-jq.sh                PreToolUse (Bash): warns when Python is used for JSON instead of jq
+    │   └── ensure-repo-hooks.sh        UserPromptSubmit: silently installs pre-commit hook in current repo
     ├── scripts/                        → ~/.claude/scripts/  Utility scripts
     │   ├── statusline-command.sh       Status bar generator (model, ctx%, tokens, cache, rate limits)
     │   ├── cleanup-sessions.py         → ~/.local/bin/claude-cleanup  Interactive session cleanup
@@ -111,7 +114,9 @@ Then edit `~/.claude/projects/<encoded-path>/memory/project_current_phase.md` to
 
 ### 6. Install repo hooks for each project
 
-Run once from each project root:
+When working in Claude Code, hooks are installed automatically on the first prompt in any repo. No manual step needed for repos you open in Claude sessions.
+
+For repos you commit to outside Claude (direct git commits, CI, or repos not yet opened in a Claude session), run once from the project root:
 
 ```bash
 cd /path/to/project
@@ -120,7 +125,7 @@ bash ~/.claude/scripts/install-repo-hooks.sh
 
 Stamps `.git/hooks/pre-commit` with a single call to the stable dispatcher (`repo-pre-commit.sh`). Safe to re-run — detects and migrates stale direct-path references automatically.
 
-To find repos that still have stale or missing hooks across all project directories:
+To find repos across all project directories that still need hooks:
 
 ```bash
 bash ~/.claude/scripts/audit-repo-hooks.sh
@@ -198,11 +203,13 @@ Hooks are configured in `claude/settings.json`. Scripts live in `claude/hooks/` 
 
 | Event | Matcher | Script | Behavior |
 |---|---|---|---|
-| `UserPromptSubmit` | — | `maintenance-check.sh` | Weekly plan check (>10 files or >14 days old); monthly session storage check (>50 MB) |
+| `UserPromptSubmit` | — | `maintenance-check.sh` | Weekly plan check (>10 files or >14 days old); monthly session storage check (>50 MB); weekly repo-hooks audit across all repos |
 | `UserPromptSubmit` | — | `coderabbit-triage.sh` | CodeRabbit review triage |
+| `UserPromptSubmit` | — | `ensure-repo-hooks.sh` | Silently installs pre-commit hook dispatcher in current repo if missing or stale |
 | `PostToolUse` | `Edit\|Write` | `post-edit-lint.sh` | `.py`: ruff check + ruff format; `.sh`: shellcheck; `.sql`: sqlfmt; `.R/.r`: lintr |
 | `PreToolUse` | `Write\|Edit` | inline | Blocks writes to `*.lock`, `*.env`, `*credentials*`, `*secret*`, `*.pem`, `*.key` |
-| `PreToolUse` | `Bash` | inline | Blocks destructive bq/gcloud/uv commands; warns on Python JSON parsing |
+| `PreToolUse` | `Bash` | inline | Blocks destructive bq/gcloud/uv commands |
+| `PreToolUse` | `Bash` | `prefer-jq.sh` | Warns when Python is used for JSON processing instead of jq |
 | `PreToolUse` | `Agent\|WebFetch` | `cost-guard.sh` | Cost tiers MEDIUM/HIGH/VERY HIGH; informational for Explore/Plan, gated for general agents |
 | `Stop` | — | `stop-hook-git-check.sh` | Blocks session end if uncommitted changes or unpushed commits exist |
 
