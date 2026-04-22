@@ -69,7 +69,13 @@ For each documentation file in scope:
 
 ## Output
 
-Write the full report to a file named `doc-audit-<timestamp>.md` in the project root (or a `reports/` directory if one exists). Do not print the full report to the terminal. Print a one-line summary when done: `N files audited, N issues found (N critical, N minor). Report: <path>`.
+Determine the report directory before writing:
+1. Get the repo name: `basename $(git rev-parse --show-toplevel)`
+2. Set the output directory: `~/.claude/doc-audits/<repo-name>/`
+3. Create it if needed: `mkdir -p ~/.claude/doc-audits/<repo-name>/`
+4. Write the report to `~/.claude/doc-audits/<repo-name>/doc-audit-<timestamp>.md`
+
+Do not print the full report to the terminal. Print a one-line summary when done: `N files audited, N issues found (N critical, N minor). Report: <path>`.
 
 Group findings by file. For each issue:
 - **File**: path
