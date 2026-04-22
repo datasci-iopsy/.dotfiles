@@ -48,10 +48,10 @@ for dir in "${SEARCH_DIRS[@]}"; do
         if [ ! -f "$hook" ]; then
             printf "  absent   %s\n" "$repo"
             absent=$((absent + 1))
-        elif grep -qF "$DISPATCHER_MARKER" "$hook"; then
+        elif grep -qF -- "$DISPATCHER_MARKER" "$hook"; then
             printf "  ok       %s\n" "$repo"
             ok=$((ok + 1))
-        elif grep -qF "$STALE_MARKER" "$hook"; then
+        elif grep -qF -- "$STALE_MARKER" "$hook"; then
             printf "  STALE    %s\n" "$repo"
             printf "           Fix: cd %s && bash ~/.claude/scripts/install-repo-hooks.sh\n" "$repo"
             stale=$((stale + 1))
