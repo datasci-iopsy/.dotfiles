@@ -32,7 +32,7 @@ case "$TOOL" in
     CHARS=${#PROMPT}
 
     case "$SUBTYPE" in
-      Explore|Plan)
+      Explore|Plan|claude-code-guide)
         # Bounded research agents — inform but don't gate
         if   [ "$CHARS" -gt 3000 ]; then RANGE="10k-30k tokens"
         elif [ "$CHARS" -gt 1000 ]; then RANGE="4k-15k tokens"

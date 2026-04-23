@@ -8,6 +8,7 @@
         "pr": ""
     },
     "includeGitInstructions": false,
+    "awaySummaryEnabled": true,
     "permissions": {
         "allow": [
             "Read",
