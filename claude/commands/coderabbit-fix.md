@@ -1,4 +1,4 @@
-Process deferred CodeRabbit findings, fix real defects, and commit by logical group.
+Process CodeRabbit findings through the triage rubric, fix real defects, and commit by logical group.
 
 ## Arguments
 
@@ -8,6 +8,25 @@ $ARGUMENTS — optional flags:
 ## Pipeline
 
 Run all steps inline. Do not spawn agents unless `--review` is passed.
+
+### 0. Check for staged batch
+
+Check whether `~/.claude/coderabbit-staged-batch.md` exists and contains non-comment content (lines not starting with `#`).
+
+If a staged batch exists:
+- Read the file — it contains raw CodeRabbit findings in the "fix all" format, one finding per "In @file around lines X" block
+- For each finding, apply the **full triage rubric**:
+  1. Read the affected file around the reported lines to understand local context
+  2. Grep for the affected symbol across the codebase to find callers and related files
+  3. Rate 1-5:
+     - 1-2: false positive or nitpick — dismiss with one-line rationale, no edit
+     - 3: judgment call — append to `~/.claude/coderabbit-deferred.md`, report "Deferred: <summary>"
+     - 4-5: real defect — spawn the `code-surgeon` agent (`subagent_type: "general-purpose"`, description `"Fix CR-<N>: <summary>"`)
+  4. After each surgeon fix, append to `~/.claude/coderabbit-session-log.md` per the standard format
+- After all findings are processed, delete `~/.claude/coderabbit-staged-batch.md`
+- Then continue to step 1
+
+If no staged batch, proceed directly to step 1.
 
 ### 1. Read deferred findings
 

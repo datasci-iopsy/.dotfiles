@@ -182,7 +182,7 @@ Edit the appropriate module file in `bash/bashrc.d/` directly:
 bash/bashrc.d/
   02-prompt.bash          prompt customization
   04-path.bash            PATH additions, package managers
-  05-tools.bash           tool integrations (thefuck, direnv)
+  05-tools.bash           tool integrations (thefuck, direnv, claude CR wrapper)
   07-aliases-nav.bash     navigation and filesystem aliases
   09-aliases-git.bash     git aliases
   11-aliases-gcloud.bash  GCP aliases
@@ -199,6 +199,52 @@ Pass `--skip-bash` to the installer to leave your existing shell config untouche
 ```bash
 bash ~/.dotfiles/install.sh --skip-bash
 ```
+
+---
+
+## CodeRabbit workflow
+
+CodeRabbit findings are routed through a triage pipeline that rates each finding (1-5) and routes to the code-surgeon agent rather than applying fixes inline.
+
+### "Fix all" batch (CodeRabbit button)
+
+CodeRabbit's "Fix all" button generates a command like:
+
+```bash
+claude "$(cat '/var/.../coderabbit-instructions-....txt')" && rm '/var/.../...'
+```
+
+In a fresh terminal, direnv takes 3-5 seconds to load, causing CodeRabbit to retry the command. By the second send, the `rm` from the first execution has already deleted the temp file, leaving Claude with an empty prompt.
+
+The `claude` bash wrapper in `05-tools.bash` intercepts this at the shell level — before the temp file can be deleted — and stages the batch to `~/.claude/coderabbit-staged-batch.md`. Claude then starts interactively.
+
+**Workflow:**
+1. Click "Fix all" in CodeRabbit — terminal shows `[CodeRabbit] N finding(s) staged`
+2. Inside the Claude session, run `/coderabbit-fix`
+3. Step 0 reads the staged batch and runs each finding through full triage (rate → dismiss/defer/surgeon)
+4. After the batch is processed, step 1 picks up any previously deferred findings
+
+**The wrapper is automatic** — active in every new terminal via `.bashrc` → `bashrc.d/05-tools.bash`. No manual setup needed after pulling dotfiles changes; existing terminal sessions need `source ~/.dotfiles/bash/bashrc.d/05-tools.bash` once.
+
+### Individual finding paste
+
+Paste a single CodeRabbit finding directly into Claude. The `coderabbit-triage.sh` hook detects it and injects the triage rubric. Claude rates (1-5) and routes inline without needing `/coderabbit-fix`.
+
+### Triage rubric
+
+| Rating | Action |
+|---|---|
+| 1-2 | False positive or nitpick — dismiss with one-line rationale, no edit |
+| 3 | Judgment call — append to `~/.claude/coderabbit-deferred.md`, report "Deferred: ..." |
+| 4-5 | Real defect — spawn `code-surgeon` agent (`Fix CR-<N>: ...`), log to `~/.claude/coderabbit-session-log.md` |
+
+### Files
+
+| File | Purpose |
+|---|---|
+| `~/.claude/coderabbit-staged-batch.md` | Raw batch from "fix all"; read and deleted by `/coderabbit-fix` step 0 |
+| `~/.claude/coderabbit-deferred.md` | Rating-3 findings; processed by `/coderabbit-fix` step 1 |
+| `~/.claude/coderabbit-session-log.md` | Change log written after each surgeon fix; injected into context on subsequent prompts |
 
 ---
 
@@ -220,7 +266,7 @@ Custom slash commands in `claude/commands/` are symlinked to `~/.claude/commands
 |---|---|
 | `/seed-project` | Init per-project memory files from templates |
 | `/install-hooks` | Add R lint and Python ruff pre-commit hooks to a repo |
-| `/coderabbit-fix` | Process deferred CodeRabbit findings, fix real defects, and commit by logical group. Pass `--review` to gate commits through the `code-reviewer` agent first |
+| `/coderabbit-fix` | Process CodeRabbit findings through triage: reads staged batch first (from "fix all"), then deferred list. Rates each finding 1-5, dismisses/defers/surgeons. Pass `--review` to gate commits through `code-reviewer` |
 
 ---
 
@@ -273,7 +319,7 @@ Hooks are configured in `claude/settings.json`. Scripts live in `claude/hooks/` 
 | Event | Matcher | Script | Behavior |
 |---|---|---|---|
 | `UserPromptSubmit` | — | `maintenance-check.sh` | Weekly plan check (>10 files or >14 days old); monthly session storage check (>50 MB); weekly repo-hooks audit across all repos |
-| `UserPromptSubmit` | — | `coderabbit-triage.sh` | CodeRabbit review triage |
+| `UserPromptSubmit` | — | `coderabbit-triage.sh` | CodeRabbit triage: batches (2+ findings) are blocked and staged to `~/.claude/coderabbit-staged-batch.md`; individual pastes get the triage rubric injected |
 | `UserPromptSubmit` | — | `ensure-repo-hooks.sh` | Silently installs pre-commit hook dispatcher in current repo if missing or stale |
 | `PostToolUse` | `Edit\|Write` | `post-edit-lint.sh` | `.py`: ruff check + ruff format; `.sh`: shellcheck; `.sql`: sqlfmt; `.R/.r`: lintr |
 | `PreToolUse` | `Write\|Edit` | inline | Blocks writes to `*.lock`, `*.env`, `*credentials*`, `*secret*`, `*.pem`, `*.key` |

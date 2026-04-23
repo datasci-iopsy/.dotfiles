@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # coderabbit-triage.sh -- inject triage rubric when a CodeRabbit review prompt is detected
 #
-# Triggered by UserPromptSubmit hook. Detects CodeRabbit finding patterns and
-# prints the triage rubric to stdout so it lands in session context. Non-blocking
-# (always exits 0).
+# Triggered by UserPromptSubmit hook. Two modes:
 #
-# Detection patterns:
-#   - "Verify each finding against the current code" (direct paste format)
-#   - coderabbit-instructions (file-based format piped via cat)
+# 1. "Fix all" batch (starts with "Fix the following issues"):
+#    Stages findings to ~/.claude/coderabbit-staged-batch.md, then exits 2 (blocked).
+#    User runs /coderabbit-fix which reads the staged batch and runs full triage.
+#
+# 2. Individual finding paste ("Verify each finding..." or coderabbit-instructions):
+#    Injects triage rubric into context (exits 0). Claude rates and routes inline.
 #
 # Rating 3 deferred findings accumulate in ~/.claude/coderabbit-deferred.md
 # for the current session only. On first detection per session the file is
@@ -22,16 +23,53 @@ set -euo pipefail
 
 DEFERRED="$HOME/.claude/coderabbit-deferred.md"
 SESSION_LOG="$HOME/.claude/coderabbit-session-log.md"
+STAGED="$HOME/.claude/coderabbit-staged-batch.md"
 STAMP_DIR="$HOME/.claude"
 
-if ! command -v jq &>/dev/null; then
-  exit 0
+JQ=""
+for _jq_candidate in jq /opt/homebrew/bin/jq /usr/local/bin/jq "$HOME/.local/bin/jq"; do
+    if command -v "$_jq_candidate" &>/dev/null 2>&1; then
+        JQ="$_jq_candidate"
+        break
+    fi
+done
+if [[ -z "$JQ" ]]; then
+    exit 0
 fi
 
 input=$(cat)
-prompt=$(echo "$input" | jq -r '.prompt // empty')
-session_id=$(echo "$input" | jq -r '.session_id // empty')
+prompt=$(echo "$input" | "$JQ" -r '.prompt // empty')
+session_id=$(echo "$input" | "$JQ" -r '.session_id // empty')
 
+# ------------------------------------------------------------------
+# Detect "fix all" batch: CodeRabbit's batch button produces a prompt
+# with multiple findings, each preceded by "Verify each finding against
+# the current code". A single paste has exactly one such line; a batch
+# has two or more. Count occurrences — two or more means it is a batch.
+# ------------------------------------------------------------------
+verify_count=$(echo "$prompt" | grep -c 'Verify each finding against the current code' 2>/dev/null || echo 0)
+if [[ "$verify_count" -ge 2 ]]; then
+    finding_count=$(echo "$prompt" | grep -c 'Verify each finding against the current code' || true)
+    {
+        echo "# CodeRabbit Staged Batch"
+        echo "# Staged: $(date '+%Y-%m-%d %H:%M')"
+        echo "# Findings: ${finding_count}"
+        echo ""
+        echo "$prompt"
+    } > "$STAGED"
+    cat >&2 <<BLOCK
+[CodeRabbit triage: batch staged]
+
+${finding_count} finding(s) written to ~/.claude/coderabbit-staged-batch.md.
+"Fix the following issues" bypasses the triage rubric -- run /coderabbit-fix
+to process each finding through rating (1-5) and surgeon delegation.
+BLOCK
+    exit 2
+fi
+
+# ------------------------------------------------------------------
+# Individual finding paste or file-based format: inject triage rubric
+# ------------------------------------------------------------------
 if echo "$prompt" | grep -qE 'Verify each finding against the current code|coderabbit-instructions'; then
     # On first CodeRabbit prompt in this session, reset the deferred file and session log
     stamp="$STAMP_DIR/.coderabbit-session"
