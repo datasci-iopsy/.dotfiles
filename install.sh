@@ -7,6 +7,15 @@ set -euo pipefail
 
 DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Flag parsing
+SKIP_BASH=false
+for _arg in "$@"; do
+    case "$_arg" in
+        --skip-bash) SKIP_BASH=true ;;
+    esac
+done
+unset _arg
+
 symlink() {
     local src="$1" dst="$2"
     mkdir -p "$(dirname "$dst")"
@@ -64,11 +73,26 @@ echo ""
 echo "=== R Style ==="
 symlink "$DOTFILES/.lintr" "$HOME/.lintr"
 
+if ! $SKIP_BASH; then
+    echo ""
+    echo "=== Bash: Config files ==="
+    symlink "$DOTFILES/bash/bash_profile" "$HOME/.bash_profile"
+    symlink "$DOTFILES/bash/bashrc"       "$HOME/.bashrc"
+
+    echo ""
+    echo "=== Bash: Machine-local config (copy-once, then edit) ==="
+    copy_template "$DOTFILES/bash/bashrc.local.template" "$HOME/.bashrc.local"
+fi
+
 echo ""
 echo "Done."
 echo ""
 echo "Next steps:"
-echo "  1. Edit ~/.claude/settings.local.json  — set GITHUB_TOKEN and model"
-echo "  2. Edit ~/.claude/CLAUDE.local.md      — note machine-specific environment"
-echo "  3. Run ~/.claude/scripts/seed-memory.sh from any project root to init memory"
-echo "  4. Run ~/.claude/scripts/install-repo-hooks.sh in repos that need lint hooks"
+echo "  1. Edit ~/.bashrc.local                — set GOOGLE_CLOUD_PROJECT and machine-local vars"
+echo "  2. Edit ~/.claude/settings.local.json  — set GITHUB_TOKEN and model"
+echo "  3. Edit ~/.claude/CLAUDE.local.md      — note machine-specific environment"
+echo "  4. Run ~/.claude/scripts/seed-memory.sh from any project root to init memory"
+echo "  5. Run ~/.claude/scripts/install-repo-hooks.sh in repos that need lint hooks"
+echo ""
+echo "To skip bash config on machines with an existing shell setup:"
+echo "  bash install.sh --skip-bash"
