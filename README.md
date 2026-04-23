@@ -1,6 +1,6 @@
 # dotfiles
 
-Personal dotfiles for Claude Code. Managed via symlinks — `install.sh` sets everything up on any machine.
+Personal dotfiles for Claude Code and bash shell configuration. Managed via symlinks — `install.sh` sets everything up on any machine.
 
 ---
 
@@ -11,6 +11,23 @@ Personal dotfiles for Claude Code. Managed via symlinks — `install.sh` sets ev
 ├── install.sh                          Main installer (symlinks + template copies)
 ├── .lintr                              → ~/.lintr   Global R style config
 ├── .mcp.json                           → ~/.mcp.json  MCP server configs (GitHub + placeholders)
+├── bash/
+│   ├── bash_profile                    → ~/.bash_profile  Thin login-shell loader (sources .bashrc)
+│   ├── bashrc                          → ~/.bashrc   Main interactive shell loader
+│   ├── bashrc.d/                       Modular config sourced in numbered order by bashrc
+│   │   ├── 01-shell-init.bash          Source ~/.profile for login shells
+│   │   ├── 02-prompt.bash              Custom prompt with git branch
+│   │   ├── 03-colors.bash              CLICOLOR (portable)
+│   │   ├── 04-path.bash                pyenv, pipx, gcloud PATH (with existence guards)
+│   │   ├── 05-tools.bash               thefuck, direnv (with command -v guards)
+│   │   ├── 06-functions.bash           mcd() and helpers
+│   │   ├── 07-aliases-nav.bash         Navigation and filesystem aliases
+│   │   ├── 09-aliases-git.bash         Git aliases
+│   │   ├── 10-aliases-python.bash      Python aliases
+│   │   └── 11-aliases-gcloud.bash      Google Cloud SDK aliases
+│   ├── os-darwin.bash                  macOS overrides: Homebrew, BSD ls aliases, LSCOLORS, Finder alias
+│   ├── os-linux.bash                   Linux overrides: GNU ls aliases, LS_COLORS, xdg-open alias
+│   └── bashrc.local.template           Template for ~/.bashrc.local (machine-local vars, gitignored)
 └── claude/
     ├── CLAUDE.md                       → ~/.claude/CLAUDE.md   Short index; rules live in rules/
     ├── CLAUDE.local.md.template        Template for machine-specific Claude overrides (gitignored when instantiated)
@@ -79,8 +96,20 @@ git clone git@github.com:datasci-iopsy/.dotfiles.git ~/.dotfiles
 `install.sh` skips files that exist as real files (not symlinks) and prints `SKIP`. Remove and back up any that conflict:
 
 ```bash
+# Claude config
 cp ~/.claude/settings.json ~/.claude/settings.json.bak
 rm ~/.claude/settings.json
+
+# Bash config (back up your existing files before removing)
+cp ~/.bash_profile ~/.bash_profile.bak
+cp ~/.bashrc ~/.bashrc.bak
+rm ~/.bash_profile ~/.bashrc
+```
+
+To skip bash setup entirely (if you manage your own shell config):
+
+```bash
+bash ~/.dotfiles/install.sh --skip-bash
 ```
 
 ### 3. Run the installer
@@ -91,15 +120,16 @@ bash ~/.dotfiles/install.sh
 
 Each line prints `ok` (already linked), `link` (newly created), or `SKIP` (real file present — remove it first).
 
-After running, two files are **copied** (not symlinked) as machine-local config:
-- `~/.claude/settings.local.json` — edit to set `GITHUB_TOKEN` and override model if needed
+After running, three files are **copied** (not symlinked) as machine-local config:
+- `~/.bashrc.local` — set machine-local vars like `GOOGLE_CLOUD_PROJECT`, API keys, custom PATH entries
+- `~/.claude/settings.local.json` — set `GITHUB_TOKEN` and override model if needed
 - `~/.claude/CLAUDE.local.md` — fill in machine-specific environment notes
 
 These files are gitignored. They are created from templates on first install and never overwritten by subsequent `install.sh` runs.
 
 ### 4. Configure MCP
 
-Edit `~/.mcp.json` (symlinked from `.dotfiles/.mcp.json`) to add your credentials, or set `GITHUB_TOKEN` in `~/.bash_profile` so the `${GITHUB_TOKEN}` expansion in `.mcp.json` resolves at runtime.
+Edit `~/.mcp.json` (symlinked from `.dotfiles/.mcp.json`) to add your credentials, or set `GITHUB_TOKEN` in `~/.bashrc.local` so the `${GITHUB_TOKEN}` expansion in `.mcp.json` resolves at runtime.
 
 ### 5. Seed Claude memory for each project
 
@@ -129,6 +159,45 @@ To find repos across all project directories that still need hooks:
 
 ```bash
 bash ~/.claude/scripts/audit-repo-hooks.sh
+```
+
+---
+
+## Bash configuration
+
+### Sourcing chain
+
+```
+macOS Terminal (login shell):  ~/.bash_profile -> ~/.bashrc -> bashrc.d/*.bash -> os-darwin.bash -> ~/.bashrc.local
+Linux terminal (non-login):                       ~/.bashrc -> bashrc.d/*.bash -> os-linux.bash  -> ~/.bashrc.local
+```
+
+`~/.bash_profile` is a thin loader that sources `~/.bashrc`. Both are symlinks into `bash/` in this repo. All real config lives in `bash/bashrc.d/` numbered modules sourced in order. OS-specific settings (Homebrew, ls alias flags, color format) are in `os-darwin.bash` and `os-linux.bash`. Machine-local secrets and overrides go in `~/.bashrc.local` (not tracked in git).
+
+### Adding or changing shell config
+
+Edit the appropriate module file in `bash/bashrc.d/` directly:
+
+```
+bash/bashrc.d/
+  02-prompt.bash          prompt customization
+  04-path.bash            PATH additions, package managers
+  05-tools.bash           tool integrations (thefuck, direnv)
+  07-aliases-nav.bash     navigation and filesystem aliases
+  09-aliases-git.bash     git aliases
+  11-aliases-gcloud.bash  GCP aliases
+```
+
+Do not edit `~/.bash_profile` or `~/.bashrc` directly — they are symlinks and changes will be overwritten.
+
+For machine-specific values (GCP project, API keys, custom PATH), edit `~/.bashrc.local`.
+
+### Opting out of bash setup
+
+Pass `--skip-bash` to the installer to leave your existing shell config untouched:
+
+```bash
+bash ~/.dotfiles/install.sh --skip-bash
 ```
 
 ---
