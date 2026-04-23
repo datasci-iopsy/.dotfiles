@@ -22,8 +22,8 @@ case "$FILE" in
       RUFF="$HOME/.local/bin/ruff"
     fi
     if [[ -n "$RUFF" ]]; then
-      echo "[lint] ruff check: $FILE" >&2
-      $RUFF check --quiet "$FILE" 2>&1 | head -5
+      echo "[lint] ruff check --fix: $FILE" >&2
+      $RUFF check --fix --quiet "$FILE" 2>&1 | head -5
       echo "[lint] ruff format: $FILE" >&2
       $RUFF format --quiet "$FILE" 2>&1
     fi
