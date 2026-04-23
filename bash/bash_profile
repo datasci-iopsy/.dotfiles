@@ -1,0 +1,13 @@
+# ==============================================================================
+# ~/.bash_profile
+# ==============================================================================
+# Thin login-shell entry point. All configuration lives in ~/.bashrc.
+#
+# macOS Terminal.app starts login shells (sources .bash_profile).
+# Linux terminal emulators start non-login interactive shells (source .bashrc).
+# By delegating everything here to .bashrc, both platforms run identical config.
+# ==============================================================================
+
+if [ -r "$HOME/.bashrc" ]; then
+    . "$HOME/.bashrc"
+fi
