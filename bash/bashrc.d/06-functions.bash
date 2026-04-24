@@ -4,7 +4,7 @@
 
 # Make a directory and immediately cd into it
 mcd() {
-    mkdir -p "$1" && cd "$1"
+	mkdir -p "$1" && cd "$1"
 }
 
 # Uncomment to enable:

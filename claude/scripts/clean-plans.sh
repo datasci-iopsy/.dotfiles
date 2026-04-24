@@ -10,19 +10,22 @@ DAYS="${1:-14}"
 
 OLD_FILES=()
 while IFS= read -r -d '' f; do
-    OLD_FILES+=("$f")
+	OLD_FILES+=("$f")
 done < <(find "$PLAN_DIR" -name "*.md" -mtime +"$DAYS" -print0 2>/dev/null | sort -z)
 
 [ ${#OLD_FILES[@]} -eq 0 ] && echo "No plan files older than $DAYS days." && exit 0
 
 for f in "${OLD_FILES[@]}"; do
-    echo "  $(basename "$f")  ($(stat -f '%Sm' -t '%Y-%m-%d' "$f"))"
+	echo "  $(basename "$f")  ($(stat -f '%Sm' -t '%Y-%m-%d' "$f"))"
 done
 
 echo ""
 echo "${#OLD_FILES[@]} plan file(s) older than $DAYS days."
 read -rp "Delete? [y/N] " confirm
 case "$confirm" in
-    [yY]) rm "${OLD_FILES[@]}"; echo "Deleted ${#OLD_FILES[@]} file(s).";;
-    *)    echo "Aborted.";;
+[yY])
+	rm "${OLD_FILES[@]}"
+	echo "Deleted ${#OLD_FILES[@]} file(s)."
+	;;
+*) echo "Aborted." ;;
 esac

@@ -28,13 +28,13 @@ STAMP_DIR="$HOME/.claude"
 
 JQ=""
 for _jq_candidate in jq /opt/homebrew/bin/jq /usr/local/bin/jq "$HOME/.local/bin/jq"; do
-    if command -v "$_jq_candidate" &>/dev/null 2>&1; then
-        JQ="$_jq_candidate"
-        break
-    fi
+	if command -v "$_jq_candidate" &>/dev/null 2>&1; then
+		JQ="$_jq_candidate"
+		break
+	fi
 done
 if [[ -z "$JQ" ]]; then
-    exit 0
+	exit 0
 fi
 
 input=$(cat)
@@ -49,59 +49,59 @@ session_id=$(echo "$input" | "$JQ" -r '.session_id // empty')
 # ------------------------------------------------------------------
 verify_count=$(echo "$prompt" | grep -c 'Verify each finding against the current code' 2>/dev/null || echo 0)
 if [[ "$verify_count" -ge 2 ]]; then
-    finding_count=$(echo "$prompt" | grep -c 'Verify each finding against the current code' || true)
-    {
-        echo "# CodeRabbit Staged Batch"
-        echo "# Staged: $(date '+%Y-%m-%d %H:%M')"
-        echo "# Findings: ${finding_count}"
-        echo ""
-        echo "$prompt"
-    } > "$STAGED"
-    cat >&2 <<BLOCK
+	finding_count=$(echo "$prompt" | grep -c 'Verify each finding against the current code' || true)
+	{
+		echo "# CodeRabbit Staged Batch"
+		echo "# Staged: $(date '+%Y-%m-%d %H:%M')"
+		echo "# Findings: ${finding_count}"
+		echo ""
+		echo "$prompt"
+	} >"$STAGED"
+	cat >&2 <<BLOCK
 [CodeRabbit triage: batch staged]
 
 ${finding_count} finding(s) written to ~/.claude/coderabbit-staged-batch.md.
 "Fix the following issues" bypasses the triage rubric -- run /coderabbit-fix
 to process each finding through rating (1-5) and surgeon delegation.
 BLOCK
-    exit 2
+	exit 2
 fi
 
 # ------------------------------------------------------------------
 # Individual finding paste or file-based format: inject triage rubric
 # ------------------------------------------------------------------
 if echo "$prompt" | grep -qE 'Verify each finding against the current code|coderabbit-instructions'; then
-    # On first CodeRabbit prompt in this session, reset the deferred file and session log
-    stamp="$STAMP_DIR/.coderabbit-session"
-    last_session=$(cat "$stamp" 2>/dev/null || echo "")
-    if [[ "$last_session" != "$session_id" ]]; then
-        echo "$session_id" > "$stamp"
-        {
-            echo "# CodeRabbit Deferred Findings"
-            echo "# Session: $session_id"
-            echo "# $(date '+%Y-%m-%d %H:%M')"
-            echo ""
-        } > "$DEFERRED"
-        {
-            echo "# CodeRabbit Session Change Log"
-            echo "# Session: $session_id"
-            echo "# $(date '+%Y-%m-%d %H:%M')"
-            echo ""
-        } > "$SESSION_LOG"
-    fi
+	# On first CodeRabbit prompt in this session, reset the deferred file and session log
+	stamp="$STAMP_DIR/.coderabbit-session"
+	last_session=$(cat "$stamp" 2>/dev/null || echo "")
+	if [[ "$last_session" != "$session_id" ]]; then
+		echo "$session_id" >"$stamp"
+		{
+			echo "# CodeRabbit Deferred Findings"
+			echo "# Session: $session_id"
+			echo "# $(date '+%Y-%m-%d %H:%M')"
+			echo ""
+		} >"$DEFERRED"
+		{
+			echo "# CodeRabbit Session Change Log"
+			echo "# Session: $session_id"
+			echo "# $(date '+%Y-%m-%d %H:%M')"
+			echo ""
+		} >"$SESSION_LOG"
+	fi
 
-    # Inject prior session changes if any fixes have been applied this session
-    log_entries=0
-    if [[ -f "$SESSION_LOG" ]]; then
-        log_entries=$(grep -c '^## fix-' "$SESSION_LOG") || log_entries=0
-    fi
-    if [[ "$log_entries" -gt 0 ]]; then
-        echo "[CodeRabbit session context -- prior changes this session]"
-        cat "$SESSION_LOG"
-        echo ""
-    fi
+	# Inject prior session changes if any fixes have been applied this session
+	log_entries=0
+	if [[ -f "$SESSION_LOG" ]]; then
+		log_entries=$(grep -c '^## fix-' "$SESSION_LOG") || log_entries=0
+	fi
+	if [[ "$log_entries" -gt 0 ]]; then
+		echo "[CodeRabbit session context -- prior changes this session]"
+		cat "$SESSION_LOG"
+		echo ""
+	fi
 
-    cat <<'EOF'
+	cat <<'EOF'
 [CodeRabbit triage active]
 
 Context steps -- run these BEFORE rating any finding:

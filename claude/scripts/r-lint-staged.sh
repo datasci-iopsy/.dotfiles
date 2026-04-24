@@ -15,19 +15,19 @@ set -euo pipefail
 # Collect staged R files that exist on disk
 R_FILES=()
 while IFS= read -r f; do
-    [[ "$f" =~ \.[Rr]$ ]] && [ -f "$f" ] && R_FILES+=("$f")
+	[[ "$f" =~ \.[Rr]$ ]] && [ -f "$f" ] && R_FILES+=("$f")
 done < <(git diff --cached --name-only)
 
 [ ${#R_FILES[@]} -eq 0 ] && exit 0
 
 if ! command -v Rscript &>/dev/null; then
-    echo "[r-lint] Rscript not found -- skipping R lint" >&2
-    exit 0
+	echo "[r-lint] Rscript not found -- skipping R lint" >&2
+	exit 0
 fi
 
 if ! Rscript --no-init-file --quiet -e "if (!requireNamespace('lintr', quietly=TRUE)) quit(status=1)" &>/dev/null; then
-    echo "[r-lint] lintr not installed -- skipping (run: install.packages('lintr'))" >&2
-    exit 0
+	echo "[r-lint] lintr not installed -- skipping (run: install.packages('lintr'))" >&2
+	exit 0
 fi
 
 echo "[r-lint] Checking ${#R_FILES[@]} staged R file(s)..."
@@ -44,13 +44,13 @@ if ! FINDINGS=$(Rscript --no-init-file --quiet -e "
     quit(status = 1)
   }
 " "${R_FILES[@]}" 2>&1); then
-    echo ""
-    echo "$FINDINGS"
-    echo ""
-    echo "[r-lint] Fix the above before committing."
-    echo "         To bypass: SKIP_R_LINT=1 git commit ..."
-    echo ""
-    exit 1
+	echo ""
+	echo "$FINDINGS"
+	echo ""
+	echo "[r-lint] Fix the above before committing."
+	echo "         To bypass: SKIP_R_LINT=1 git commit ..."
+	echo ""
+	exit 1
 fi
 
 echo "[r-lint] No issues found."

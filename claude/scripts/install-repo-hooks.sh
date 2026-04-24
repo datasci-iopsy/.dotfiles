@@ -12,8 +12,8 @@ set -euo pipefail
 
 HOOK_DIR="$(git rev-parse --git-dir 2>/dev/null || true)/hooks"
 if [ -z "$HOOK_DIR" ] || [ "$HOOK_DIR" = "/hooks" ]; then
-    echo "ERROR: not inside a git repository." >&2
-    exit 1
+	echo "ERROR: not inside a git repository." >&2
+	exit 1
 fi
 
 HOOK_FILE="$HOOK_DIR/pre-commit"
@@ -30,31 +30,31 @@ DISPATCHER_LINE='bash "$HOME/.claude/hooks/repo-pre-commit.sh"'
 # Preserves all other hook content (e.g. repo-specific lock file guards).
 # ---------------------------------------------------------------------------
 _migrate() {
-    local hook="$1"
-    local tmp
-    tmp=$(mktemp)
+	local hook="$1"
+	local tmp
+	tmp=$(mktemp)
 
-    # Strip old lint lines and their dotfiles-added comments; keep everything else
-    awk '
+	# Strip old lint lines and their dotfiles-added comments; keep everything else
+	awk '
         /# R style lint \(added by install-repo-hooks\.sh\)/ { next }
         /# Python ruff lint \(added by install-repo-hooks\.sh\)/ { next }
         /# -+ R style lint.*-+/ { next }
         /r-lint-staged\.sh/ { next }
         /ruff-lint-staged\.sh/ { next }
         { print }
-    ' "$hook" > "$tmp"
+    ' "$hook" >"$tmp"
 
-    # Collapse runs of 3+ blank lines left by removal down to one blank line
-    awk 'BEGIN{blank=0} /^[[:space:]]*$/{blank++; if(blank<=1) print; next} {blank=0; print}' \
-        "$tmp" > "${tmp}.2"
+	# Collapse runs of 3+ blank lines left by removal down to one blank line
+	awk 'BEGIN{blank=0} /^[[:space:]]*$/{blank++; if(blank<=1) print; next} {blank=0; print}' \
+		"$tmp" >"${tmp}.2"
 
-    # Inject dispatcher after the shebang line (line 1)
-    awk -v line="$DISPATCHER_LINE" '
+	# Inject dispatcher after the shebang line (line 1)
+	awk -v line="$DISPATCHER_LINE" '
         NR == 1 { print; print ""; print "# Dotfiles lint hooks (managed by ~/.dotfiles -- never edit this line)"; print line; next }
         { print }
-    ' "${tmp}.2" > "$hook"
+    ' "${tmp}.2" >"$hook"
 
-    rm -f "$tmp" "${tmp}.2"
+	rm -f "$tmp" "${tmp}.2"
 }
 
 # ---------------------------------------------------------------------------
@@ -62,8 +62,8 @@ _migrate() {
 # ---------------------------------------------------------------------------
 
 if [ ! -f "$HOOK_FILE" ]; then
-    # No existing hook -- create a fresh one
-    cat > "$HOOK_FILE" << 'EOF'
+	# No existing hook -- create a fresh one
+	cat >"$HOOK_FILE" <<'EOF'
 #!/usr/bin/env bash
 # Pre-commit hooks (managed by ~/.dotfiles)
 # To update: bash ~/.claude/scripts/install-repo-hooks.sh
@@ -71,23 +71,23 @@ if [ ! -f "$HOOK_FILE" ]; then
 # Dotfiles lint hooks (managed by ~/.dotfiles -- never edit this line)
 bash "$HOME/.claude/hooks/repo-pre-commit.sh"
 EOF
-    chmod +x "$HOOK_FILE"
-    echo "  created  $HOOK_FILE"
+	chmod +x "$HOOK_FILE"
+	echo "  created  $HOOK_FILE"
 
 elif grep -qF "$DISPATCHER_MARKER" "$HOOK_FILE"; then
-    echo "  ok       $HOOK_FILE (dispatcher already present)"
+	echo "  ok       $HOOK_FILE (dispatcher already present)"
 
 elif grep -qF "$STALE_MARKER" "$HOOK_FILE"; then
-    # Migrate old direct-path references to the dispatcher
-    _migrate "$HOOK_FILE"
-    chmod +x "$HOOK_FILE"
-    echo "  migrated $HOOK_FILE (replaced direct-path lint calls with dispatcher)"
+	# Migrate old direct-path references to the dispatcher
+	_migrate "$HOOK_FILE"
+	chmod +x "$HOOK_FILE"
+	echo "  migrated $HOOK_FILE (replaced direct-path lint calls with dispatcher)"
 
 else
-    # Hook exists but has no lint hooks -- append dispatcher
-    printf '\n# Dotfiles lint hooks (managed by ~/.dotfiles -- never edit this line)\n%s\n' \
-        "$DISPATCHER_LINE" >> "$HOOK_FILE"
-    echo "  updated  $HOOK_FILE (appended dispatcher)"
+	# Hook exists but has no lint hooks -- append dispatcher
+	printf '\n# Dotfiles lint hooks (managed by ~/.dotfiles -- never edit this line)\n%s\n' \
+		"$DISPATCHER_LINE" >>"$HOOK_FILE"
+	echo "  updated  $HOOK_FILE (appended dispatcher)"
 fi
 
 echo ""

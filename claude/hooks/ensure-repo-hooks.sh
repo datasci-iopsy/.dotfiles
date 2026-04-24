@@ -14,8 +14,8 @@ hook="$repo/.git/hooks/pre-commit"
 grep -qF -- 'repo-pre-commit.sh' "$hook" 2>/dev/null && exit 0
 
 # Install silently; warn to stderr on failure
-if ! (cd "$repo" && bash "$HOME/.claude/scripts/install-repo-hooks.sh" > /dev/null 2>&1); then
-    echo "[hooks] Failed to install pre-commit hook in $repo" >&2
+if ! (cd "$repo" && bash "$HOME/.claude/scripts/install-repo-hooks.sh" >/dev/null 2>&1); then
+	echo "[hooks] Failed to install pre-commit hook in $repo" >&2
 fi
 
 exit 0

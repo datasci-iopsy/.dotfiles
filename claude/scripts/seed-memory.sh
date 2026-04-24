@@ -16,13 +16,13 @@ MEMORY_DIR="$HOME/.claude/projects/${ENCODED}/memory"
 mkdir -p "$MEMORY_DIR"
 
 for template in "$TEMPLATES"/*.md; do
-    filename="$(basename "$template")"
-    if [ -f "$MEMORY_DIR/$filename" ]; then
-        echo "  exists  $filename (skipped)"
-        continue
-    fi
-    cp "$template" "$MEMORY_DIR/$filename"
-    echo "  seeded  $filename"
+	filename="$(basename "$template")"
+	if [ -f "$MEMORY_DIR/$filename" ]; then
+		echo "  exists  $filename (skipped)"
+		continue
+	fi
+	cp "$template" "$MEMORY_DIR/$filename"
+	echo "  seeded  $filename"
 done
 
 echo ""

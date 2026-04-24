@@ -15,12 +15,12 @@ CMD=$(jq -r '.tool_input.command // empty')
 
 # Only check python/python3 commands
 if ! echo "$CMD" | grep -qE '\b(python|python3)\b'; then
-    exit 0
+	exit 0
 fi
 
 # Check if json is imported at all
 if ! echo "$CMD" | grep -qE '\bimport\s+json\b'; then
-    exit 0
+	exit 0
 fi
 
 # Two ways another package can be imported alongside json:
@@ -31,13 +31,13 @@ fi
 
 # Case 1: comma after json on same import line (import json, something)
 if echo "$CMD" | grep -qE '\bimport\s+json\s*,'; then
-    exit 0
+	exit 0
 fi
 
 # Case 2: any import statement for something other than json
 # Strip import json entirely, then look for remaining import keywords
 if echo "$CMD" | sed 's/import[[:space:]]*json//g' | grep -qE '\bimport\s+\w'; then
-    exit 0
+	exit 0
 fi
 
 echo "Prefer jq over Python for JSON parsing -- import json is the only import, this is a pure parsing task. jq is pre-approved, streaming, and faster." >&2
