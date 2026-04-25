@@ -48,6 +48,7 @@
             "Bash(gcloud * list *)",
             "Bash(gcloud * describe *)",
             "Bash(graphify:*)",
+            "Bash(direnv:*)",
             "Bash(uv:*)",
             "Bash(uvr:*)",
             "Bash(ALLOW_LOCK_COMMIT=1 git commit*)"
