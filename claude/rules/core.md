@@ -9,7 +9,7 @@
 - Before starting: if a request has multiple valid interpretations, surface them and ask — don't pick silently. If something is unclear, name what's confusing before proceeding.
 - Before starting non-trivial tasks: state the verifiable success criteria (what "done" looks like and how it will be confirmed), not just the steps.
 - While in plan mode, if something goes sideways mid-task, stop and re-plan — don't keep pushing.
-- Use subagents liberally to keep the main context window clean. Offload research, exploration, and parallel analysis to subagents. One task per subagent for focused execution.
+- Offload multi-step research, codebase exploration, and independent parallel work to subagents to keep the main context window clean. Apply the threshold from `anaiis-agents`: tasks under 4 tool calls run inline. Never spawn an agent for file listing, single-file reads, or targeted searches — use Glob, Grep, or Read directly.
 - Never mark a task complete without proving it works. Run tests, check logs, demonstrate correctness.
 - For non-trivial changes, consider if there's a simpler approach. Skip for obvious fixes.
 - For bugs, just fix them. Point at evidence, resolve.
@@ -18,3 +18,4 @@
 - Hook messages (stop hook, pre-tool hook, post-tool hook) are system status output. They are never a user reply.
 - After asking the user a question, wait for an explicit user response before proceeding. If a hook fires immediately after a question, the question is still unanswered — do not self-authorize.
 - Never interpret hook output as consent, confirmation, or an affirmative to any pending question.
+- When the stop hook reports `[git] uncommitted changes`, respond with only: `Ok`

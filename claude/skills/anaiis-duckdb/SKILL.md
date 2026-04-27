@@ -1,6 +1,6 @@
 ---
 name: anaiis-duckdb
-description: Use to analyze ad hoc SQL analytics on local parquet, CSV, Excel, JSON, Avro, SQLite (.db), and remote files via the DuckDB CLI
+description: Ad hoc SQL analytics on local parquet, CSV, Excel, JSON, Avro, or SQLite files — auto-triggers on data analysis requests
 ---
 
 # DuckDB Analytics
@@ -142,9 +142,9 @@ duckdb -c "COPY (SELECT * FROM 'file.parquet' WHERE condition) TO 'filtered.parq
 
 - Do not create persistent `.duckdb` database files unless the user explicitly asks. Use in-memory mode (no db path argument).
 - Do not install Python packages (`duckdb`, `pandas`, `pyarrow`) without asking.
-- Do not dump large result sets into context. Summarize with SQL aggregations or write results to a file.
 - Do not use `SELECT *` without `LIMIT` on files over 100MB.
 - Prefer heredoc batching over multiple `-c` calls whenever 2 or more queries target the same data.
+- Query discipline (purpose classification, column selection, re-query prevention): follow `rules/duckdb.md`.
 
 ## Output format
 
