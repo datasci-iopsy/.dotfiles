@@ -10,6 +10,10 @@ Cloud: GCP (BigQuery, gcloud). Version control: GitHub via `gh` CLI.
 Git author is set via `GIT_AUTHOR_NAME` / `GIT_COMMITTER_NAME` in `~/.claude/settings.json`.
 The `attribution.commit` field controls Co-Authored-By trailers only, not the commit author.
 
+## Rules and skills
+
+Rules (`~/.claude/rules/`) constrain Claude's behavior across all tasks. Skills (`~/.claude/skills/`) add task-specific workflow steps within those constraints. When they conflict, rules take precedence.
+
 ## Rules index
 | File | Covers |
 |---|---|
@@ -21,6 +25,8 @@ The `attribution.commit` field controls Co-Authored-By trailers only, not the co
 | `rules/python.md` | pyenv, ruff, uv |
 | `rules/session.md` | Token efficiency, context thresholds, output prefs, compaction |
 | `rules/core.md` | Simplicity, root causes, workflow, sub-agents |
+| `rules/duckdb.md` | DuckDB query discipline: purpose-based patterns, no re-querying context |
+| `rules/citations.md` | Citation integrity: corpus-only sources, no fabrication, web search only on explicit request |
 
 ## Machine-local overrides
 `~/.claude/CLAUDE.local.md` (gitignored) — machine-specific environment notes.
