@@ -18,3 +18,4 @@ SCRIPTS="$HOME/.claude/scripts"
 
 bash "$SCRIPTS/r-lint-staged.sh"
 bash "$SCRIPTS/ruff-lint-staged.sh"
+bash "$SCRIPTS/json-lint-staged.sh"
