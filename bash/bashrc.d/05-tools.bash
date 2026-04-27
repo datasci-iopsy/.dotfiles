@@ -2,10 +2,10 @@
 # 05-tools.bash — Shell tool integrations
 # ==============================================================================
 
-# thefuck — corrects previous console commands
+# thefuck — corrects previous console commands (lazy-loaded on first use)
 if command -v thefuck >/dev/null 2>&1; then
-	eval "$(thefuck --alias)"
-	eval "$(thefuck --alias FUCK)"
+	thefuck() { unset -f thefuck; eval "$(command thefuck --alias)"; thefuck "$@"; }
+	FUCK() { unset -f FUCK; eval "$(command thefuck --alias FUCK)"; FUCK "$@"; }
 fi
 
 # direnv — per-directory environment variables
@@ -43,3 +43,5 @@ claude() {
 	fi
 	command claude "$@"
 }
+
+alias claude-yolo='claude --dangerously-skip-permissions'

@@ -2,15 +2,12 @@
 # 04-path.bash — PATH and package manager setup (portable)
 # ==============================================================================
 
-# pyenv — Python version management
+# pyenv — binary on PATH for legacy/work projects that need it via .envrc
+# Personal projects use uv. To enable pyenv shims in a project, add to .envrc:
+#   eval "$(pyenv init -)"
 if [ -d "$HOME/.pyenv" ]; then
 	export PYENV_ROOT="$HOME/.pyenv"
 	export PATH="$PYENV_ROOT/bin:$PATH"
-	eval "$(pyenv init -)"
-	# pyenv-virtualenv is optional; skip silently if not installed
-	if pyenv commands 2>/dev/null | grep -q virtualenv-init; then
-		eval "$(pyenv virtualenv-init -)"
-	fi
 fi
 
 # pipx / uv tools — installed to ~/.local/bin
