@@ -1,6 +1,7 @@
 ---
 name: anaiis-gitrebase
-description: Safely rebase git commits into logical, review-ready groups using branch reconstruction instead of interactive rebase
+description: "Explicit /anaiis-gitrebase — rebase commits into logical groups before PR review"
+trigger: /anaiis-gitrebase
 ---
 
 # Git Rebase (Branch Reconstruction)

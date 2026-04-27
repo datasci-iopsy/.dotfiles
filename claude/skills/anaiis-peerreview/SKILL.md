@@ -1,6 +1,6 @@
 ---
 name: anaiis-peerreview
-description: Self-review academic manuscripts and dissertation drafts through the lens of a seasoned I-O Psychology journal reviewer, applying APA 7th, JARS, and publisher peer review standards before submission
+description: Peer-review manuscripts and dissertation drafts through a journal reviewer lens — auto-triggers on manuscript review requests; APA 7th and JARS standards
 ---
 
 # Peer Review
@@ -25,15 +25,31 @@ Do not use `python-docx`, `pandoc`, or any other tool unless textutil fails (fil
 
 ---
 
-## Scope
+## When to activate
 
-`$ARGUMENTS` — file path to the manuscript (PDF, .docx, .md, or .tex), optionally followed by a specific section to focus on.
+Activate when the request matches any of these patterns:
 
-**Activate for:** manuscripts, research papers, journal article drafts, dissertation chapters, dissertation proposals.
+| Pattern | Example |
+|---|---|
+| Manuscript or paper draft | "Review this paper draft", "give me feedback on my manuscript" |
+| Dissertation chapter or proposal | "Peer review my dissertation proposal", "review chapter 3" |
+| Journal submission preparation | "What do I need to fix before submitting?", "is this ready for submission?" |
+| Pre-submission self-review | "What would a reviewer say about this?", "simulate journal review" |
 
-**Do not activate for:** code review, documentation audits, literature searches, writing new content, or generating a review to submit to a journal on someone else's behalf.
+Do NOT activate when:
+
+- The user wants to **edit or rewrite** content — use anaiis-copyedit (reviewer flags, does not edit)
+- The user wants a **literature search** — use anaiis-litreview
+- The user wants a **documentation audit** of code or project files — use anaiis-docaudit
+- The user asks to generate a review for submission to a journal on someone else's work — decline per APA ethical guidelines
+- The target is a code file, PR diff, or technical spec — use review or security-review
+- The user says "review my literature section" **without a manuscript file path** — that is a catalog gap identification task; use anaiis-litreview
+
+**Disambiguation:** "Review my literature section" with a file path = manuscript section review → activate peerreview. Without a file path = catalog synthesis → use litreview.
 
 **Format standard:** APA 7th edition and APA Journal Article Reporting Standards (JARS) apply to all evaluations. No other format systems are used.
+
+The manuscript file path (PDF, .docx, .md, or .tex) is inferred from the user's message, optionally followed by a specific section to focus on.
 
 ---
 
@@ -224,6 +240,7 @@ Rate each dimension: **Strong** / **Adequate** / **Needs Strengthening** — wit
 - Max 20 pages per Read call (tool constraint). Read full manuscripts in passes: pages 1–15, then 16–30, etc.
 - Do not rewrite content. Flag the issue and ask a question. (Wiley/APA)
 - Do not suggest specific citations to add. Note where coverage is thin and ask what literature the authors draw on.
+- Citation integrity: follow `rules/citations.md`. Do not name specific papers as missing unless they are confirmed in the local catalog. State the gap without inventing the paper.
 - Do not provide an accept/reject recommendation. (APA: "do not include your recommended decision within the narrative to the author")
 - Treat multiple files as parts of the same manuscript, not independent papers.
 - Critique within the author's theoretical framework, not from an external framework preference.
@@ -249,5 +266,8 @@ Apply these checks regardless of whether the manuscript explicitly addresses the
 
 ## Integration with other skills
 
+**Rules take precedence over this skill.** If `rules/session.md` or other rule files conflict with a step below, the rule governs.
+
 - **anaiis-litreview:** When a literature gap is identified, note it in Major or Minor Concerns and let the user invoke litreview separately. The reviewer identifies gaps; it does not do the search.
 - **anaiis-agents:** For manuscripts over 50 pages, consider invoking the agents skill to parallelize the Read 2 section reviews (one agent per major section), then synthesize in the main thread.
+- **anaiis-copyedit:** If the user wants copyediting after the peer review, that is a separate invocation. This skill flags issues; it does not rewrite.

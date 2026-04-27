@@ -1,6 +1,7 @@
 ---
 name: anaiis-gitpr
-description: Create a pull request for the current branch after CodeRabbit triage and commit cleanup
+description: "Explicit /anaiis-gitpr — open a pull request after CodeRabbit triage and commit cleanup"
+trigger: /anaiis-gitpr
 ---
 
 # Git PR

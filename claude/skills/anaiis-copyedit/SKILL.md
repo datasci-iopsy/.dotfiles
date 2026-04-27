@@ -1,6 +1,6 @@
 ---
 name: anaiis-copyedit
-description: Line edit, copyedit, and proofread academic manuscripts for clarity, consistency, APA 7th compliance, and production readiness, applying a three-level editorial judgment framework (fix silently, query the author, leave alone)
+description: Copyedit and proofread academic manuscripts for clarity, APA 7th compliance, and production readiness
 ---
 
 # Copyedit
