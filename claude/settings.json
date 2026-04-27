@@ -137,12 +137,36 @@
                     }
                 ]
             }
+        ],
+        "PreCompact": [
+            {
+                "matcher": "*",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash $HOME/.claude/hooks/pre-compact.sh"
+                    }
+                ]
+            }
+        ],
+        "PostCompact": [
+            {
+                "matcher": "*",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash $HOME/.claude/hooks/post-compact.sh"
+                    }
+                ]
+            }
         ]
     },
     "statusLine": {
         "type": "command",
         "command": "bash $HOME/.claude/scripts/statusline-command.sh"
     },
-    "effortLevel": "medium",
-    "awaySummaryEnabled": true
+    "effortLevel": "high",
+    "awaySummaryEnabled": true,
+    "autoCompactEnabled": false,
+    "skipDangerousModePermissionPrompt": true
 }
