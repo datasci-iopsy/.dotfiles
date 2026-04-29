@@ -90,7 +90,18 @@ export PATH="$HOME/.dotfiles/bin:$PATH"
 
 Open a new shell. `which claude` should now resolve to `~/.dotfiles/bin/claude`.
 
-### 4. Per-project memory bootstrap
+### 4. Suppress session-level settings noise
+
+`claude/settings.json` is symlinked to `~/.claude/settings.json`. Claude Code writes model and effort changes directly to that file during a session, which generates constant `git diff` noise. Tell git to ignore working-tree changes to it:
+
+```bash
+cd ~/.dotfiles
+git update-index --skip-worktree claude/settings.json
+```
+
+This is per-clone and not tracked in git, so run it once per machine after cloning. The committed version remains the canonical baseline. To commit a real settings change, cycle through `--no-skip-worktree`, commit, then re-apply `--skip-worktree`.
+
+### 5. Per-project memory bootstrap
 
 Run once from each project root you'll use Claude in:
 
