@@ -1,20 +1,16 @@
 #!/usr/bin/env bash
 # ~/.dotfiles/install.sh
-# Run once on a new machine to symlink dotfiles into place.
+# Run once on a new machine to symlink the Claude policy stack into place.
 # Safe to re-run — skips anything already correctly linked.
+#
+# This dotfiles repo no longer manages your shell config. The only shell-
+# adjacent piece is bin/claude — a shell-agnostic wrapper that intercepts
+# CodeRabbit "fix all" batches before claude starts. To use it, add this
+# directory to your PATH (instructions printed below).
 
 set -euo pipefail
 
 DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# Flag parsing
-SKIP_BASH=false
-for _arg in "$@"; do
-	case "$_arg" in
-	--skip-bash) SKIP_BASH=true ;;
-	esac
-done
-unset _arg
 
 symlink() {
 	local src="$1" dst="$2"
@@ -69,29 +65,26 @@ echo ""
 echo "=== R Style ==="
 symlink "$DOTFILES/.lintr" "$HOME/.lintr"
 
-if ! $SKIP_BASH; then
-	echo ""
-	echo "=== Bash: Config files ==="
-	symlink "$DOTFILES/bash/bash_profile" "$HOME/.bash_profile"
-	symlink "$DOTFILES/bash/bashrc" "$HOME/.bashrc"
-
-	echo ""
-	echo "=== Bash: Machine-local config (copy-once, then edit) ==="
-	copy_template "$DOTFILES/bash/bashrc.local.template" "$HOME/.bashrc.local"
-fi
-
 echo ""
 echo "Done."
 echo ""
+echo "=== Claude wrapper (opt-in, shell-agnostic) ==="
+echo ""
+echo "Add this single line to your shell config (~/.bashrc, ~/.zshrc, or"
+echo "~/.config/fish/config.fish — choose whichever your shell reads):"
+echo ""
+echo "    export PATH=\"\$HOME/.dotfiles/bin:\$PATH\""
+echo ""
+echo "That puts $DOTFILES/bin/claude ahead of the system claude in PATH so"
+echo "CodeRabbit batches get intercepted before claude starts. Works in"
+echo "bash, zsh, fish, or any POSIX shell. No 'source' required."
+echo ""
 echo "Cleanup (if upgrading from a prior install):"
 echo "  rm -f \"\$HOME/.mcp.json\"   # the github MCP entry was removed; this clears any dangling symlink"
+echo "  rm -f \"\$HOME/.bashrc\" \"\$HOME/.bash_profile\" \"\$HOME/.bashrc.local\"   # only if these were dotfiles symlinks; back up first"
 echo ""
 echo "Next steps:"
-echo "  1. Edit ~/.bashrc.local                — set GOOGLE_CLOUD_PROJECT and machine-local vars"
-echo "  2. Edit ~/.claude/settings.local.json  — set GITHUB_TOKEN and model"
-echo "  3. Edit ~/.claude/CLAUDE.local.md      — note machine-specific environment"
-echo "  4. Run ~/.claude/scripts/seed-memory.sh from any project root to init memory"
-echo "  5. Run ~/.claude/scripts/install-repo-hooks.sh in repos that need lint hooks"
-echo ""
-echo "To skip bash config on machines with an existing shell setup:"
-echo "  bash install.sh --skip-bash"
+echo "  1. Edit ~/.claude/settings.local.json  — set GITHUB_TOKEN and model"
+echo "  2. Edit ~/.claude/CLAUDE.local.md      — note machine-specific environment"
+echo "  3. Run ~/.claude/scripts/seed-memory.sh from any project root to init memory"
+echo "  4. Run ~/.claude/scripts/install-repo-hooks.sh in repos that need lint hooks"
