@@ -1,6 +1,7 @@
 ---
 name: anaiis-docaudit
 description: Audit documentation files for accuracy against the current project state
+built_in_alternative: "/review checks the diff. anaiis-docaudit checks the entire docs tree (READMEs, CLAUDE.md, in-repo guides) against current repo state — different scope (full tree vs changed lines) and different output (audit report vs PR review comments)."
 ---
 
 # Documentation Audit
