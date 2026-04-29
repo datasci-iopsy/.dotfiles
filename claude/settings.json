@@ -101,7 +101,7 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "FILE=$(jq -r '.tool_input.file_path // empty'); case \"$FILE\" in *.lock|*.env|*.env.*|*credentials*|*secret*|*.pem|*.key) echo 'BLOCK: Refusing write to sensitive file: '\"$FILE\"; exit 2;; esac; exit 0"
+                        "command": "FILE=$(jq -r '.tool_input.file_path // empty'); case \"$FILE\" in *.env.example|*.env.template) exit 0 ;; *.lock|*.env|*.env.*|*credentials*|*secret*|*.pem|*.key) echo 'BLOCK: Refusing write to sensitive file: '\"$FILE\"; exit 2;; esac; exit 0"
                     }
                 ]
             },
