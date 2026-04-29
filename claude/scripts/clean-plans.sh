@@ -15,8 +15,17 @@ done < <(find "$PLAN_DIR" -name "*.md" -mtime +"$DAYS" -print0 2>/dev/null | sor
 
 [ ${#OLD_FILES[@]} -eq 0 ] && echo "No plan files older than $DAYS days." && exit 0
 
+# Portable mtime as YYYY-MM-DD (BSD stat on darwin, GNU stat elsewhere)
+mtime_ymd() {
+	if [[ "$OSTYPE" == darwin* ]]; then
+		stat -f '%Sm' -t '%Y-%m-%d' "$1"
+	else
+		stat -c %y "$1" 2>/dev/null | cut -d' ' -f1
+	fi
+}
+
 for f in "${OLD_FILES[@]}"; do
-	echo "  $(basename "$f")  ($(stat -f '%Sm' -t '%Y-%m-%d' "$f"))"
+	echo "  $(basename "$f")  ($(mtime_ymd "$f"))"
 done
 
 echo ""
