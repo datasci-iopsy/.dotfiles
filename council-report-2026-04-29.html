@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Council Report — Dotfiles Audit (2026-04-29)</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --paper: #fafaf7;
+    --rule: #d8d4cb;
+    --muted: #6b6b6b;
+    --accent: #b3261e;
+    --accent-soft: #f4ddd9;
+    --ok: #2e7d32;
+    --ok-soft: #e0efe2;
+    --warn: #b8860b;
+    --warn-soft: #faf0d4;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 48px 32px 96px;
+  }
+  header { border-bottom: 1px solid var(--rule); padding-bottom: 16px; margin-bottom: 32px; }
+  h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .subtitle { color: var(--muted); font-size: 13px; }
+  h2 { font-size: 19px; margin: 36px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--rule); letter-spacing: -0.01em; }
+  h3 { font-size: 15px; margin: 20px 0 8px; }
+  h4 { font-size: 14px; margin: 16px 0 6px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  p, li { margin: 6px 0; }
+  ul { padding-left: 22px; }
+  code { background: #efece4; padding: 1px 5px; border-radius: 3px; font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  pre { background: #efece4; padding: 12px 14px; border-radius: 5px; overflow-x: auto; font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .question { background: #fff; border: 1px solid var(--rule); border-left: 3px solid var(--ink); padding: 14px 18px; border-radius: 3px; margin-bottom: 24px; }
+  .verdict { background: #fff; border: 1px solid var(--rule); border-radius: 5px; padding: 18px 22px; margin: 16px 0 28px; }
+  .verdict h2 { border: none; margin-top: 0; }
+  .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; vertical-align: middle; margin-left: 6px; }
+  .pill-crit { background: var(--accent-soft); color: var(--accent); }
+  .pill-warn { background: var(--warn-soft); color: var(--warn); }
+  .pill-ok { background: var(--ok-soft); color: var(--ok); }
+  .one-thing { background: var(--accent-soft); border-left: 4px solid var(--accent); padding: 14px 20px; border-radius: 3px; margin: 24px 0; }
+  .one-thing h3 { margin-top: 0; color: var(--accent); }
+  details { border: 1px solid var(--rule); border-radius: 4px; margin: 6px 0; background: #fff; }
+  details > summary { cursor: pointer; padding: 10px 14px; font-weight: 500; user-select: none; list-style: none; }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::before { content: "▸ "; color: var(--muted); }
+  details[open] > summary::before { content: "▾ "; }
+  details > div { padding: 0 18px 14px; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0 16px; font-size: 13.5px; }
+  th, td { border: 1px solid var(--rule); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: #efece4; font-weight: 600; }
+  td.num { width: 36px; text-align: right; color: var(--muted); }
+  .alignment { display: grid; grid-template-columns: 100px repeat(5, 1fr); gap: 2px; margin: 14px 0 24px; font-size: 12.5px; }
+  .alignment > div { padding: 8px 10px; background: #fff; border: 1px solid var(--rule); }
+  .alignment > .row-label { background: #efece4; font-weight: 600; }
+  .a-yes { background: var(--ok-soft) !important; color: var(--ok); font-weight: 600; }
+  .a-no  { background: var(--accent-soft) !important; color: var(--accent); font-weight: 600; }
+  .a-mid { background: var(--warn-soft) !important; color: var(--warn); font-weight: 600; }
+  footer { margin-top: 48px; padding-top: 14px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 12px; }
+  .small { font-size: 12.5px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Council Report — Dotfiles Audit</h1>
+  <div class="subtitle">2026-04-29 · <code>~/.dotfiles</code> · 5-advisor LLM Council, peer-reviewed</div>
+</header>
+
+<div class="question">
+  <strong>Question.</strong> Provide a technical security, structure, and performance audit on this <code>.dotfiles</code> repo. Two profiles share one config across machines (macOS now, Linux later). Codebase must be lean and precise; skills must do something above and beyond Claude built-ins (e.g. <code>/simplify</code>); token efficiency is paramount. Use a two-level rubric — top-level facets and sub-facets.
+</div>
+
+<div class="verdict">
+  <h2>The Verdict <span class="pill pill-crit">1 critical · 6 high · multi-phase plan</span></h2>
+  <p><strong>Cull, close, then compound — in that order.</strong> The repo is fundamentally sound and unusually well-instrumented (memory + compact hooks are a real moat). But the inline destructive-command blocklist is currently theater because two independent permission-bypass paths sit in front of it. Close those today; cull stale artifacts and undifferentiated skills this week; instrument and expand only after.</p>
+</div>
+
+<div class="one-thing">
+  <h3>The one thing to do first</h3>
+  <p>Remove the <code>claude-yolo</code> alias from <code>bash/bashrc.d/05-tools.bash</code> and set <code>skipDangerousModePermissionPrompt: false</code> in <code>claude/settings.json</code>. Two-line change. Restores the inline blocklist as a real guardrail before anything else is audited. Everything else in this report is downstream of that fix.</p>
+</div>
+
+<h2>The Final Rubric</h2>
+<p>The user asked for CIA-style framing. The council split — C used a CIA subset (Confidentiality + Integrity, dropping Availability), D rejected CIA entirely for single-user tooling. The chairman keeps Security and Performance as the user requested, adopts D's policy-coherence and skill-justification axes as additional top levels, and folds A's hygiene and portability concerns into their own facets.</p>
+
+<table>
+  <tr><th>Top-level facet</th><th>Sub-facets</th><th>Pass signal</th></tr>
+  <tr>
+    <td><strong>1. Security</strong></td>
+    <td>1.1 Confidentiality — secret-loading provenance, tracked/ignored boundary, MCP supply chain<br>1.2 Integrity / blast-radius — permission-bypass paths, destructive-cmd blocklist, cross-machine drift</td>
+    <td>No bypass route around inline blocklist; <code>${GITHUB_PAT}</code> resolver is documented; <code>.env</code> not tracked.</td>
+  </tr>
+  <tr>
+    <td><strong>2. Policy coherence</strong></td>
+    <td>2.1 Rule self-consistency<br>2.2 Hook-vs-rule overlap<br>2.3 Auditor=auditee circularity</td>
+    <td>No contradictions between <code>rules/*.md</code> and <code>memory/feedback_*.md</code>; security audits run with <code>skipDangerousModePermissionPrompt:false</code>.</td>
+  </tr>
+  <tr>
+    <td><strong>3. Performance / execution cost</strong></td>
+    <td>3.1 Per-prompt hook tax<br>3.2 Per-Bash hook tax<br>3.3 Auto-loaded rule tonnage<br>3.4 Cost predictability per session class</td>
+    <td>UserPromptSubmit chain &lt;100 ms aggregate; PreToolUse chain &lt;50 ms; CLAUDE.md + <code>rules/</code> total &lt;~6 KB; named token envelope per workflow.</td>
+  </tr>
+  <tr>
+    <td><strong>4. Skill justification</strong></td>
+    <td>4.1 Built-in collision (per skill)<br>4.2 Domain differentiation (I-O Psych moat vs commodity)<br>4.3 Trigger discipline</td>
+    <td>Each <code>anaiis-*</code> declares one named axis on which it beats the built-in, or is deleted.</td>
+  </tr>
+  <tr>
+    <td><strong>5. Hygiene &amp; legibility</strong></td>
+    <td>5.1 Artifact hygiene (no stale audit MDs in root)<br>5.2 Test/prod separation (no <code>test-*.sh</code> under <code>hooks/</code>)<br>5.3 Naming legibility (anaiis glossary; no fear-named aliases)<br>5.4 Discoverability (60-second README intro)</td>
+    <td><code>ls ~/.dotfiles</code> shows only living config; new collaborator can answer "what is this" in under a minute.</td>
+  </tr>
+  <tr>
+    <td><strong>6. Portability</strong></td>
+    <td>6.1 macOS-ism scan<br>6.2 Profile-model clarity<br>6.3 Symlink install resilience</td>
+    <td>No BSD-only <code>sed -i</code>, <code>pbcopy</code>, <code>osascript</code> in shared layers; "two profiles" framing matches the actual mechanism; <code>install.sh</code> handles stale symlinks.</td>
+  </tr>
+</table>
+
+<h2>Findings ranked by blast radius</h2>
+<table>
+  <tr><th class="num">#</th><th>Finding</th><th>Facet</th><th>Severity</th></tr>
+  <tr><td class="num">1</td><td><code>skipDangerousModePermissionPrompt: true</code> + <code>claude-yolo</code> alias = two routes around the inline blocklist that protects work GCP from <code>bq rm</code> / <code>gcloud delete</code>.</td><td>1.2</td><td><span class="pill pill-crit">CRITICAL</span></td></tr>
+  <tr><td class="num">2</td><td><code>${GITHUB_PAT}</code> resolver is unidentified. <code>.env</code> is empty, not auto-sourced; <code>.mcp.json</code> references it. Until traced, every secret-handling finding is downstream of an unknown trust boundary.</td><td>1.1</td><td><span class="pill pill-crit">HIGH</span></td></tr>
+  <tr><td class="num">3</td><td><code>claude/hooks/test-compact-hooks.sh</code> (348 lines) lives in production hooks dir; <code>install.sh</code> will symlink it.</td><td>5.2</td><td><span class="pill pill-warn">HIGH</span></td></tr>
+  <tr><td class="num">4</td><td>Per-prompt hook tax never measured. 3 UserPromptSubmit + 2 PreToolUse-Bash hooks fire on every turn. Token tax is invisible.</td><td>3.1, 3.2</td><td><span class="pill pill-warn">HIGH</span></td></tr>
+  <tr><td class="num">5</td><td>~62 KB of stale audit MDs in repo root (<code>COUNCIL-REVIEW.md</code>, <code>HANDOFF.md</code>, <code>MEMORY-SYSTEM-AUDIT.md</code>, <code>VERIFICATION-SCENARIOS.md</code>) get globbed by every "read the repo" agent.</td><td>5.1</td><td><span class="pill pill-warn">MEDIUM</span></td></tr>
+  <tr><td class="num">6</td><td>Each <code>anaiis-*</code> skill needs a "why not built-in X" line. Domain skills (litreview, peerreview, duckdb, copyedit, graphify) clearly differentiate; others (docaudit, preflight, changelog) overlap built-ins.</td><td>4.1</td><td><span class="pill pill-warn">MEDIUM</span></td></tr>
+  <tr><td class="num">7</td><td>Internal contradiction: <code>rules/core.md</code> says "offload to subagents"; memory <code>feedback_agent_token_cost.md</code> says "agents are expensive, sequential is fine." LLM arbitrates every session.</td><td>2.1</td><td><span class="pill pill-warn">MEDIUM</span></td></tr>
+  <tr><td class="num">8</td><td>"Two profiles on one machine" framing is fiction — there is one profile + machine-local override. Creates phantom requirements.</td><td>6.2</td><td><span class="pill pill-ok">LOW</span></td></tr>
+  <tr><td class="num">9</td><td><code>bashrc.d/</code> jumps 07→09; intent of missing 08 is undocumented.</td><td>5.3</td><td><span class="pill pill-ok">LOW</span></td></tr>
+  <tr><td class="num">10</td><td>macOS-isms (BSD <code>sed</code>, <code>pbcopy</code>, <code>osascript</code>, Homebrew paths) not scanned, despite stated future-Linux requirement.</td><td>6.1</td><td><span class="pill pill-ok">LOW</span></td></tr>
+  <tr><td class="num">11</td><td>Auditor=auditee circularity: running <code>/security-review</code> on this repo is meaningless if that Claude session itself runs under <code>skipDangerousModePermissionPrompt:true</code>.</td><td>2.3</td><td><span class="pill pill-warn">MEDIUM</span></td></tr>
+  <tr><td class="num">12</td><td><code>.vscode/</code> committed to a personal dotfiles repo.</td><td>5.1</td><td><span class="pill pill-ok">LOW</span></td></tr>
+</table>
+
+<h2>The 3-phase plan</h2>
+
+<h3>Phase 1 — Close the bypass (today, blocking)</h3>
+<table>
+  <tr><th class="num">#</th><th>Action</th><th>Pass signal</th></tr>
+  <tr><td class="num">1</td><td>Remove <code>claude-yolo</code> alias from <code>bash/bashrc.d/05-tools.bash</code>.</td><td><code>alias claude-yolo</code> errors in fresh shell.</td></tr>
+  <tr><td class="num">2</td><td>Set <code>skipDangerousModePermissionPrompt: false</code> in <code>claude/settings.json</code>.</td><td>Setting reads <code>false</code>.</td></tr>
+  <tr><td class="num">3</td><td>Trace the <code>${GITHUB_PAT}</code> resolver. Move into <code>~/.bashrc.local</code> via <code>direnv</code>, or into <code>~/.claude/settings.local.json</code> as <code>env</code>, or document the silent-fail.</td><td><code>claude</code> startup logs show github MCP server connecting OR documented as intentionally unused.</td></tr>
+</table>
+
+<h3>Phase 2 — Cull the noise (this week)</h3>
+<table>
+  <tr><th class="num">#</th><th>Action</th></tr>
+  <tr><td class="num">4</td><td><code>git rm</code> the four root MDs or <code>git mv</code> them to <code>docs/archive/</code>.</td></tr>
+  <tr><td class="num">5</td><td><code>git mv claude/hooks/test-compact-hooks.sh tests/</code>.</td></tr>
+  <tr><td class="num">6</td><td><code>git rm .env</code> (duplicates empty <code>.env.example</code>; neither is sourced).</td></tr>
+  <tr><td class="num">7</td><td>Untrack <code>.vscode/</code>; add to <code>.gitignore</code>.</td></tr>
+  <tr><td class="num">8</td><td>Investigate intent of missing <code>bashrc.d/08-*.bash</code>; renumber or comment the gap.</td></tr>
+  <tr><td class="num">9</td><td>For each <code>anaiis-*</code> skill, add one-line "why not built-in X" frontmatter, or delete.</td></tr>
+  <tr><td class="num">10</td><td>Add a 30-line top section to <code>README.md</code>: what is this, what is "anaiis", what gets symlinked, what <code>*.local</code> files mean, how to bootstrap a new machine.</td></tr>
+</table>
+
+<h3>Phase 3 — Instrument and compound (next sprint)</h3>
+<table>
+  <tr><th class="num">#</th><th>Action</th></tr>
+  <tr><td class="num">11</td><td>Time the three <code>UserPromptSubmit</code> hooks individually. If aggregate &gt;100&nbsp;ms, collapse into one dispatcher with early-exit guards.</td></tr>
+  <tr><td class="num">12</td><td>Audit <code>claude/rules/*.md</code> against <code>~/.claude/projects/*/memory/feedback_*.md</code> for contradictions. Start with <code>core.md</code> vs <code>feedback_agent_token_cost.md</code>.</td></tr>
+  <tr><td class="num">13</td><td>Audit <code>os-darwin.bash</code>, hooks, and skill scripts for BSD-only <code>sed -i</code>, <code>pbcopy</code>, <code>osascript</code>, or Homebrew paths. Gate on <code>$OSTYPE</code> or use portable forms.</td></tr>
+  <tr><td class="num">14</td><td>Implement E's <code>/memory-mine</code> — reads across <code>~/.claude/projects/*/memory/</code>, surfaces recurring patterns as candidate rules. Only after Phases 1 and 2.</td></tr>
+</table>
+
+<h2>Where the council aligned</h2>
+<div class="alignment">
+  <div class="row-label">Finding</div>
+  <div class="row-label" style="text-align:center">A · Outsider</div>
+  <div class="row-label" style="text-align:center">B · Executor</div>
+  <div class="row-label" style="text-align:center">C · Contrarian</div>
+  <div class="row-label" style="text-align:center">D · First Principles</div>
+  <div class="row-label" style="text-align:center">E · Expansionist</div>
+
+  <div>Permission bypass is highest priority</div>
+  <div class="a-mid">implied</div>
+  <div class="a-mid">listed</div>
+  <div class="a-yes">named</div>
+  <div class="a-no">silent</div>
+  <div class="a-no">silent</div>
+
+  <div>Cull root audit MDs</div>
+  <div class="a-yes">yes</div>
+  <div class="a-yes">yes</div>
+  <div class="a-yes">yes</div>
+  <div class="a-mid">implied</div>
+  <div class="a-no">silent</div>
+
+  <div>test-compact-hooks.sh → tests/</div>
+  <div class="a-yes">yes</div>
+  <div class="a-yes">yes</div>
+  <div class="a-yes">yes</div>
+  <div class="a-no">silent</div>
+  <div class="a-no">silent</div>
+
+  <div>Per-prompt hook tax is real</div>
+  <div class="a-no">silent</div>
+  <div class="a-yes">yes</div>
+  <div class="a-yes">yes</div>
+  <div class="a-mid">implied</div>
+  <div class="a-no">silent</div>
+
+  <div>Skills must beat built-ins</div>
+  <div class="a-no">silent</div>
+  <div class="a-yes">yes</div>
+  <div class="a-yes">yes</div>
+  <div class="a-yes">yes</div>
+  <div class="a-yes">yes</div>
+
+  <div>"Two profiles" is imprecise</div>
+  <div class="a-yes">yes</div>
+  <div class="a-no">silent</div>
+  <div class="a-mid">implied</div>
+  <div class="a-yes">yes</div>
+  <div class="a-no">silent</div>
+
+  <div>CIA triad is wrong frame</div>
+  <div class="a-no">silent</div>
+  <div class="a-no">silent</div>
+  <div class="a-mid">partial</div>
+  <div class="a-yes">yes</div>
+  <div class="a-no">silent</div>
+
+  <div>Memory system is underused</div>
+  <div class="a-no">silent</div>
+  <div class="a-no">silent</div>
+  <div class="a-no">silent</div>
+  <div class="a-no">silent</div>
+  <div class="a-yes">yes</div>
+</div>
+
+<h2>Advisor responses (collapsed)</h2>
+
+<details>
+  <summary>A — The Outsider · cold-eye reading, naming and discoverability</summary>
+  <div>
+    <p>Walking in cold, the first thing that hits me is signal-to-noise in the root. Five top-level Markdown files (~80&nbsp;KB) and I cannot tell which are docs, stale artifacts, or tooling inputs. <code>HANDOFF</code> in a repo root reads like leftover scratch. <code>.env</code> / <code>.env.example</code> are identical and empty; <code>.mcp.json</code> references <code>${GITHUB_PAT}</code> with no visible loader. <code>claude-yolo</code> + <code>skipDangerousModePermissionPrompt:true</code> are a yellow flag — the naming literally says "skip the guardrail." A 348-line <code>test-compact-hooks.sh</code> in the production hooks dir looks executable-by-default. <code>bashrc.d</code> 07→09 reads as a deletion someone forgot to renumber. "anaiis" appears 12 times with no glossary. <code>.vscode/</code> in a dotfiles repo suggests editor settings leaked in.</p>
+    <p><strong>Sub-facets:</strong> Discoverability, Naming legibility, Artifact hygiene, Onboarding-from-zero, Secret-loading provenance, Test/production separation, Profile model clarity, Dead-code/numbering integrity.</p>
+    <p><strong>Highest-leverage fix:</strong> a 30-line README top section + move audit artifacts to <code>docs/archive/</code>.</p>
+  </div>
+</details>
+
+<details>
+  <summary>B — The Executor · pass/fail checklist and exact commands</summary>
+  <div>
+    <p><strong>Security.</strong> rm <code>.env</code>; verify allow list; fix <code>${GITHUB_PAT}</code> source. Pass = no secrets in tree, no destructive verbs in allow list, MCP env var resolves in fresh shell.</p>
+    <p><strong>Structure.</strong> Move audit MDs to <code>docs/archive/</code>; move <code>test-compact-hooks.sh</code> to <code>tests/</code>. Pass = <code>ls ~/.dotfiles</code> shows only living config.</p>
+    <p><strong>Performance.</strong> Collapse 3 UserPromptSubmit hooks into one dispatcher; time <code>prefer-jq.sh</code> &lt;50 ms. Pass = prompt-to-first-token unchanged.</p>
+    <p><strong>Skills.</strong> Keep litreview/peerreview/graphify; drop redundant.</p>
+    <p><strong>Hard-cull.</strong></p>
+    <pre>git rm .env COUNCIL-REVIEW.md HANDOFF.md MEMORY-SYSTEM-AUDIT.md VERIFICATION-SCENARIOS.md
+git mv claude/hooks/test-compact-hooks.sh tests/</pre>
+    <p><strong>Path.</strong> Branch → cull → fix MCP → consolidate hooks → run install on second machine → PR + <code>/security-review</code>.</p>
+  </div>
+</details>
+
+<details open>
+  <summary>C — The Contrarian · blast-radius framing, named the load-bearing risk</summary>
+  <div>
+    <p><strong>Security &gt; Blast-radius containment</strong> (not generic CIA). <strong>Performance &gt; Per-prompt hook tax.</strong> <strong>Skill correctness &gt; Built-in collision surface.</strong> Availability is noise here.</p>
+    <p>Failure modes: (1) <code>skipDangerousModePermissionPrompt: true</code> AND <code>claude-yolo</code> alias = two independent bypass paths around the PreToolUse hooks blocking <code>*.env*</code>, <code>*credentials*</code>, <code>bq rm</code>, <code>gcloud delete</code>. The blocklist is theater. (2) Three UserPromptSubmit + three PreToolUse hooks per turn = invisible token tax. (3) <code>test-compact-hooks.sh</code> in production hooks. (4) <code>bashrc.local.template</code> copy = silent drift across machines. (5) <code>anaiis-copyedit</code>/<code>anaiis-docaudit</code> overlap <code>/simplify</code>/<code>/review</code>; <code>anaiis-preflight</code> overlaps <code>/security-review</code>. (6) 62 KB of stale review artifacts in root hit every "read the repo" agent.</p>
+    <p><strong>Single biggest risk:</strong> the dual permission bypass. Hook-based blocklist is the only thing standing between a hallucinated command and the work GCP project, and there are two routes around it. <em>Five out of five peer reviewers ranked this response strongest specifically for naming this.</em></p>
+  </div>
+</details>
+
+<details>
+  <summary>D — The First Principles Thinker · this isn't dotfiles, it's a policy stack</summary>
+  <div>
+    <p>This isn't a dotfiles repo. It's a personal Claude Code policy stack with a thin shell-config tail. Eighty percent of the surface (rules, skills, hooks, agents, commands) shapes one LLM's behavior. Once named correctly, Linux portability matters less than whether the stack is internally coherent and the LLM can execute it under load.</p>
+    <p>"Two profiles on one machine" is wrong — there's one profile plus a machine-local override file. Either build real profile routing or drop the claim.</p>
+    <p>CIA triad is the wrong frame — single-user dev tooling, not adversarial systems. The real failure modes are <strong>instruction collisions, token waste, and skill redundancy</strong>.</p>
+    <p><strong>Proposed rubric:</strong> Policy coherence · Execution cost · Skill justification · Boundary hygiene · Portability surface (bash-only).</p>
+    <p><strong>Wrong question:</strong> "is this secure and performant?" <strong>Right question:</strong> is the stack causing or fixing the friction the user's own insights data already flagged (Claude guessing, jumping to edits, missing conventions)?</p>
+  </div>
+</details>
+
+<details>
+  <summary>E — The Expansionist · memory system is the moat being treated as plumbing</summary>
+  <div>
+    <p>The memory system + pre/post-compact hooks is the most differentiated piece of this repo. Per-project <code>MEMORY.md</code> indexes + auto-generated handoffs are a session-continuity layer that compounds. The 9-of-31 CodeRabbit cadence and the surgical-rebase pattern are training data for skills that encode the user's actual style.</p>
+    <p><strong>Sub-facets to add:</strong> skill differentiation (I-O Psych moat vs commodity), session-continuity quality, cost predictability per session class, onboarding velocity, cross-OS portability as feature, cross-domain leverage.</p>
+    <p><strong>2× upgrade:</strong> a <code>/memory-mine</code> skill that reads across <code>~/.claude/projects/*/memory/</code> and surfaces recurring patterns as candidate skills or rules. The substrate already exists; nothing harvests it.</p>
+    <p class="small">Peer review note: 4 of 5 reviewers flagged this response as the council's biggest blind spot — it expands surface area when the evidence calls for contraction. The idea is valid as v2 after Phases 1 and 2.</p>
+  </div>
+</details>
+
+<h2>Peer review highlights</h2>
+<details>
+  <summary>5 anonymized reviewers · who was strongest, who had the biggest blind spot, what everyone missed</summary>
+  <div>
+    <h4>Consensus on strongest</h4>
+    <ul>
+      <li><strong>5/5 reviewers chose C.</strong> Named the load-bearing risk (dual bypass), ordered findings by blast radius rather than tidy taxonomy, correctly demoted Availability for single-user tooling.</li>
+    </ul>
+    <h4>Consensus on biggest blind spot</h4>
+    <ul>
+      <li><strong>4/5 reviewers chose E.</strong> Proposes new surface (<code>/memory-mine</code>) while the repo has an unaddressed permission bypass and an unverified MCP secret loader. Adding before closing is wrong direction.</li>
+      <li>1/5 chose D — sharp reframe, no concrete fixes; reframing without remediation leaves the bypass live.</li>
+      <li>1/5 chose B — pass/fail checklist ending in <code>/security-review</code> is auditor=auditee; running it under <code>claude-yolo</code> validates nothing.</li>
+    </ul>
+    <h4>What all five missed (peer-discovered)</h4>
+    <ul>
+      <li><strong>MCP supply chain.</strong> <code>${GITHUB_PAT}</code> resolver is unidentified. Until traced, every secret-handling finding is downstream of an unknown trust boundary. (3 reviewers, unanimous.)</li>
+      <li><strong>Rules vs memory contradiction.</strong> <code>core.md</code> says "offload to subagents" while memory <code>feedback_agent_token_cost.md</code> says agents are expensive and sequential is fine. Unresolved instruction collision the LLM arbitrates every session.</li>
+      <li><strong>macOS-isms unsurfaced.</strong> Despite stated Linux-readiness, no advisor scanned for BSD <code>sed</code>, <code>pbcopy</code>, <code>osascript</code>, Homebrew paths.</li>
+      <li><strong>The 07→09 gap</strong> may be a meaningful deletion worth a comment, not a numbering bug.</li>
+      <li><strong>Symlink install collision behavior</strong> with stale symlinks and pre-existing real files unverified.</li>
+      <li><strong>Auditor = auditee.</strong> Running <code>/security-review</code> on this repo is meaningless under the very <code>skipDangerousModePermissionPrompt:true</code> it would evaluate. Audit must run with the bypass already off.</li>
+      <li><strong>Hook bounded execution time.</strong> No advisor proposed timing the 11 hooks before recommending changes.</li>
+    </ul>
+  </div>
+</details>
+
+<footer>
+  Generated by LLM Council · 2026-04-29 · 5 advisors · 5 anonymized peer reviews · chairman synthesis<br>
+  Transcript: <code>council-transcript-2026-04-29.md</code> · Repo: <code>~/.dotfiles</code>
+</footer>
+
+</body>
+</html>
