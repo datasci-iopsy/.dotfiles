@@ -66,10 +66,6 @@ echo "=== Claude Code: CLI tools ==="
 symlink "$DOTFILES/claude/scripts/cleanup-sessions.py" "$HOME/.local/bin/claude-cleanup"
 
 echo ""
-echo "=== MCP ==="
-symlink "$DOTFILES/.mcp.json" "$HOME/.mcp.json"
-
-echo ""
 echo "=== R Style ==="
 symlink "$DOTFILES/.lintr" "$HOME/.lintr"
 
@@ -86,6 +82,9 @@ fi
 
 echo ""
 echo "Done."
+echo ""
+echo "Cleanup (if upgrading from a prior install):"
+echo "  rm -f \"\$HOME/.mcp.json\"   # the github MCP entry was removed; this clears any dangling symlink"
 echo ""
 echo "Next steps:"
 echo "  1. Edit ~/.bashrc.local                — set GOOGLE_CLOUD_PROJECT and machine-local vars"
