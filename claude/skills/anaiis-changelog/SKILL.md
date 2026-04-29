@@ -1,6 +1,7 @@
 ---
 name: anaiis-changelog
 description: Generate a changelog or release notes from the current branch diff for PR preparation
+built_in_alternative: "/coderabbit-fix is closest but is fix-oriented, not summary-oriented. anaiis-changelog produces structured, PR-ready release notes from the branch diff (categorized as added/changed/fixed/breaking) and is invoked after fixes are merged, not during triage."
 ---
 
 # Changelog
