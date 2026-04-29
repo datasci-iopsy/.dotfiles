@@ -101,7 +101,7 @@ fi
 # ── Write handoff file ────────────────────────────────────────────────────────
 cat > "$HANDOFF_FILE" << HANDOFF
 ---
-name: Session handoff ${DATE}
+name: Session handoff ${FILE_TS}
 description: Pre-compact snapshot — ${TRIGGER} trigger, branch ${BRANCH}
 type: project
 ---
