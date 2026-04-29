@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Council Report — Dotfiles Audit (2026-04-29)</title>
 <style>
   :root {
@@ -90,42 +91,49 @@
 <p>The user asked for CIA-style framing. The council split — C used a CIA subset (Confidentiality + Integrity, dropping Availability), D rejected CIA entirely for single-user tooling. The chairman keeps Security and Performance as the user requested, adopts D's policy-coherence and skill-justification axes as additional top levels, and folds A's hygiene and portability concerns into their own facets.</p>
 
 <table>
-  <tr><th>Top-level facet</th><th>Sub-facets</th><th>Pass signal</th></tr>
+  <thead>
+    <tr><th scope="col">Top-level facet</th><th scope="col">Sub-facets</th><th scope="col">Pass signal</th></tr>
+  </thead>
+  <tbody>
   <tr>
-    <td><strong>1. Security</strong></td>
+    <th scope="row"><strong>1. Security</strong></th>
     <td>1.1 Confidentiality — secret-loading provenance, tracked/ignored boundary, MCP supply chain<br>1.2 Integrity / blast-radius — permission-bypass paths, destructive-cmd blocklist, cross-machine drift</td>
     <td>No bypass route around inline blocklist; <code>${GITHUB_PAT}</code> resolver is documented; <code>.env</code> not tracked.</td>
   </tr>
   <tr>
-    <td><strong>2. Policy coherence</strong></td>
+    <th scope="row"><strong>2. Policy coherence</strong></th>
     <td>2.1 Rule self-consistency<br>2.2 Hook-vs-rule overlap<br>2.3 Auditor=auditee circularity</td>
     <td>No contradictions between <code>rules/*.md</code> and <code>memory/feedback_*.md</code>; security audits run with <code>skipDangerousModePermissionPrompt:false</code>.</td>
   </tr>
   <tr>
-    <td><strong>3. Performance / execution cost</strong></td>
+    <th scope="row"><strong>3. Performance / execution cost</strong></th>
     <td>3.1 Per-prompt hook tax<br>3.2 Per-Bash hook tax<br>3.3 Auto-loaded rule tonnage<br>3.4 Cost predictability per session class</td>
     <td>UserPromptSubmit chain &lt;100 ms aggregate; PreToolUse chain &lt;50 ms; CLAUDE.md + <code>rules/</code> total &lt;~6 KB; named token envelope per workflow.</td>
   </tr>
   <tr>
-    <td><strong>4. Skill justification</strong></td>
+    <th scope="row"><strong>4. Skill justification</strong></th>
     <td>4.1 Built-in collision (per skill)<br>4.2 Domain differentiation (I-O Psych moat vs commodity)<br>4.3 Trigger discipline</td>
     <td>Each <code>anaiis-*</code> declares one named axis on which it beats the built-in, or is deleted.</td>
   </tr>
   <tr>
-    <td><strong>5. Hygiene &amp; legibility</strong></td>
+    <th scope="row"><strong>5. Hygiene &amp; legibility</strong></th>
     <td>5.1 Artifact hygiene (no stale audit MDs in root)<br>5.2 Test/prod separation (no <code>test-*.sh</code> under <code>hooks/</code>)<br>5.3 Naming legibility (anaiis glossary; no fear-named aliases)<br>5.4 Discoverability (60-second README intro)</td>
     <td><code>ls ~/.dotfiles</code> shows only living config; new collaborator can answer "what is this" in under a minute.</td>
   </tr>
   <tr>
-    <td><strong>6. Portability</strong></td>
+    <th scope="row"><strong>6. Portability</strong></th>
     <td>6.1 macOS-ism scan<br>6.2 Profile-model clarity<br>6.3 Symlink install resilience</td>
     <td>No BSD-only <code>sed -i</code>, <code>pbcopy</code>, <code>osascript</code> in shared layers; "two profiles" framing matches the actual mechanism; <code>install.sh</code> handles stale symlinks.</td>
   </tr>
+  </tbody>
 </table>
 
 <h2>Findings ranked by blast radius</h2>
 <table>
-  <tr><th class="num">#</th><th>Finding</th><th>Facet</th><th>Severity</th></tr>
+  <thead>
+    <tr><th class="num" scope="col">#</th><th scope="col">Finding</th><th scope="col">Facet</th><th scope="col">Severity</th></tr>
+  </thead>
+  <tbody>
   <tr><td class="num">1</td><td><code>skipDangerousModePermissionPrompt: true</code> + <code>claude-yolo</code> alias = two routes around the inline blocklist that protects work GCP from <code>bq rm</code> / <code>gcloud delete</code>.</td><td>1.2</td><td><span class="pill pill-crit">CRITICAL</span></td></tr>
   <tr><td class="num">2</td><td><code>${GITHUB_PAT}</code> resolver is unidentified. <code>.env</code> is empty, not auto-sourced; <code>.mcp.json</code> references it. Until traced, every secret-handling finding is downstream of an unknown trust boundary.</td><td>1.1</td><td><span class="pill pill-crit">HIGH</span></td></tr>
   <tr><td class="num">3</td><td><code>claude/hooks/test-compact-hooks.sh</code> (348 lines) lives in production hooks dir; <code>install.sh</code> will symlink it.</td><td>5.2</td><td><span class="pill pill-warn">HIGH</span></td></tr>
@@ -138,6 +146,7 @@
   <tr><td class="num">10</td><td>macOS-isms (BSD <code>sed</code>, <code>pbcopy</code>, <code>osascript</code>, Homebrew paths) not scanned, despite stated future-Linux requirement.</td><td>6.1</td><td><span class="pill pill-ok">LOW</span></td></tr>
   <tr><td class="num">11</td><td>Auditor=auditee circularity: running <code>/security-review</code> on this repo is meaningless if that Claude session itself runs under <code>skipDangerousModePermissionPrompt:true</code>.</td><td>2.3</td><td><span class="pill pill-warn">MEDIUM</span></td></tr>
   <tr><td class="num">12</td><td><code>.vscode/</code> committed to a personal dotfiles repo.</td><td>5.1</td><td><span class="pill pill-ok">LOW</span></td></tr>
+  </tbody>
 </table>
 
 <h2>The 3-phase plan</h2>

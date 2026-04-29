@@ -12,6 +12,8 @@
 
 Audit `~/.dotfiles` as a Claude-Code-centric configuration repo with a thin shell-config tail. Surface a two-level rubric and judge the repo against it. Constraints: single-user, two physical machines, macOS now, Linux later, token-efficient by stated value. Evidence base: symlink install via `install.sh`; 11 hooks (3 fire on every UserPromptSubmit, 2 on every Bash); 10 auto-loading rules; 12 `anaiis-*` skills + `graphify`; 3 sub-agents on sonnet-4-6; `skipDangerousModePermissionPrompt: true` and `claude-yolo` alias; `.env` (empty `GITHUB_PAT=`) referenced by `.mcp.json` with no visible loader; 348-line `test-compact-hooks.sh` in production hooks dir; ~62KB of stale audit MDs in repo root; `bashrc.d/` numbering jumps `07→09`; `.vscode/` committed.
 
+> **Note:** "anaiis" refers to a suite of custom Claude Code skills prefixed `anaiis-*` (e.g., anaiis-litreview, anaiis-peerreview) designed for I-O Psychology research workflows.
+
 ## Anonymization map
 
 | Letter | Advisor |
