@@ -2,7 +2,7 @@
 # load-global-memory.sh — emit the cross-project memory tier as context
 # on the FIRST UserPromptSubmit of each Claude session.
 #
-# Tracks first-prompt-ness via a marker file at /tmp/claude-session-<id>.seen
+# Tracks first-prompt-ness via a marker file at /tmp/claude-session-<id>.global-loaded
 # so subsequent prompts in the same session don't re-emit the global tier.
 # Skips silently if the global tier is absent.
 #
@@ -27,6 +27,8 @@ INDEX="$GLOBAL_DIR/MEMORY.md"
 
 SESSION_ID=$(printf '%s' "$INPUT" | jq -r '.session_id // ""' 2>/dev/null)
 [ -n "$SESSION_ID" ] || exit 0
+# Reject SESSION_IDs with path-unsafe chars to prevent marker path traversal.
+printf '%s' "$SESSION_ID" | grep -qE '^[a-zA-Z0-9._-]+$' || exit 0
 
 MARKER="/tmp/claude-session-${SESSION_ID}.global-loaded"
 
@@ -51,6 +53,8 @@ $(cat "$INDEX")
 # Pull in any markdown link targets from the index, e.g. [Title](filename.md)
 while IFS= read -r f; do
     target="$GLOBAL_DIR/$f"
+    # Guard against path traversal: target must resolve under GLOBAL_DIR.
+    case "$target" in "$GLOBAL_DIR/"*) ;; *) continue ;; esac
     if [ -f "$target" ] && [ "$f" != "MEMORY.md" ]; then
         PAYLOAD="$PAYLOAD
 ### $f
@@ -58,7 +62,7 @@ while IFS= read -r f; do
 $(cat "$target")
 "
     fi
-done < <(grep -oE '\([a-zA-Z0-9_./-]+\.md\)' "$INDEX" | tr -d '()' | sort -u)
+done < <(grep -oE '\([a-zA-Z0-9_.]+\.md\)' "$INDEX" | tr -d '()' | sort -u)
 
 # Emit as a systemMessage so Claude has the content as context for this turn.
 jq -n --arg msg "$PAYLOAD" '{"systemMessage": $msg}'
