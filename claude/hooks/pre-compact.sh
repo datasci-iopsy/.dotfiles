@@ -5,10 +5,16 @@
 #   trigger=manual  — user ran /compact
 #   trigger=auto    — context threshold hit automatically
 #
-# Writes a structured handoff file to the project memory directory and
-# updates MEMORY.md so future sessions load it automatically.
+# Writes a structured handoff file to the project memory directory's
+# handoffs/ subdirectory. Filename uses ISO 8601 minute-precision UTC
+# timestamps (handoff_2026-04-29T15-22Z_<sid>.md) so multiple compactions
+# in the same day cannot collide on filename. Applies a rolling cap of
+# 5 inside the handoffs/ subdir (oldest deleted on overflow).
 #
-# Output file: ~/.claude/projects/<project>/memory/handoff_<date>_<id>.md
+# MEMORY.md is NOT mutated — handoffs are an opaque mechanism enforced
+# by the subdirectory itself; the index stays focused on topical memory.
+#
+# Output file: ~/.claude/projects/<project>/memory/handoffs/handoff_<isots>_<id>.md
 # Exit 0 always — never block compaction.
 
 set -euo pipefail
@@ -35,13 +41,14 @@ fi
 # Claude Code sanitizes CWD to a project key by replacing / and . with -
 PROJECT_KEY=$(echo "$CWD" | tr '/.' '-')
 MEMORY_DIR="$HOME/.claude/projects/$PROJECT_KEY/memory"
+HANDOFFS_DIR="$MEMORY_DIR/handoffs"
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-DATE=$(date +"%Y-%m-%d")
+# Filename-safe ISO timestamp (no colons): 2026-04-29T15-22Z
+FILE_TS=$(date -u +"%Y-%m-%dT%H-%MZ")
 SESSION_SHORT="${SESSION_ID:0:8}"
-HANDOFF_FILE="$MEMORY_DIR/handoff_${DATE}_${SESSION_SHORT}.md"
-MEMORY_INDEX="$MEMORY_DIR/MEMORY.md"
+HANDOFF_FILE="$HANDOFFS_DIR/handoff_${FILE_TS}_${SESSION_SHORT}.md"
 
-mkdir -p "$MEMORY_DIR"
+mkdir -p "$HANDOFFS_DIR"
 
 # ── Locate transcript JSONL ───────────────────────────────────────────────────
 # Prefer transcript_path from hook input (provided by Claude Code directly)
@@ -132,28 +139,25 @@ ${CHANGED_FILES}
 \`\`\`
 HANDOFF
 
-# ── Update MEMORY.md index ────────────────────────────────────────────────────
-HANDOFF_BASENAME=$(basename "$HANDOFF_FILE")
-
-# Remove any existing entry for this date to avoid duplicates from multiple
-# compactions in one day, then re-add the current one.
-TEMP=$(mktemp)
-if [ -f "$MEMORY_INDEX" ]; then
-    grep -v "handoff_${DATE}" "$MEMORY_INDEX" > "$TEMP" || true
-else
-    touch "$TEMP"
+# ── Apply rolling cap of 5 inside handoffs/ ───────────────────────────────────
+# Keep newest 5 by mtime; delete the rest. The subdirectory itself is the
+# bounded log; MEMORY.md is no longer touched.
+CAP=5
+COUNT=$(find "$HANDOFFS_DIR" -maxdepth 1 -name 'handoff_*.md' -type f 2>/dev/null | wc -l | tr -d ' ')
+if [ "${COUNT:-0}" -gt "$CAP" ]; then
+    OVERFLOW=$((COUNT - CAP))
+    # ls -1t lists newest first; tail -$OVERFLOW gives us the oldest to delete.
+    ls -1t "$HANDOFFS_DIR"/handoff_*.md 2>/dev/null | tail -n "$OVERFLOW" | while IFS= read -r old; do
+        rm -f "$old"
+    done
 fi
 
-# Keep at most 4 existing handoff lines (oldest drops off at 5+this one)
-NON_HANDOFF=$(grep -v '\[Session handoff' "$TEMP" || true)
-HANDOFF_LINES=$(grep '\[Session handoff' "$TEMP" | tail -4 || true)
-{
-    echo "$NON_HANDOFF"
-    echo "$HANDOFF_LINES"
-    echo "- [Session handoff ${DATE}](${HANDOFF_BASENAME}) — ${TRIGGER} compact, branch ${BRANCH}"
-} | grep -v '^$' > "$MEMORY_INDEX"
-
-rm -f "$TEMP"
+# Migration: if any flat handoff_*.md files still live in $MEMORY_DIR (from
+# the pre-Phase-9 layout), move them into handoffs/ now. Idempotent.
+for legacy in "$MEMORY_DIR"/handoff_*.md; do
+    [ -f "$legacy" ] || continue
+    mv "$legacy" "$HANDOFFS_DIR/"
+done
 
 echo "[pre-compact] handoff written: $HANDOFF_FILE" >&2
 exit 0

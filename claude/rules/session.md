@@ -40,7 +40,7 @@ These instructions are read by the compactor. When summarizing this conversation
 - Every open error, blocker, or unresolved question
 - Every mid-session behavioral override (e.g., "user said to skip X for this session")
 - Every memory file written this session (path only)
-- The filename of any handoff file written to memory/ before this compaction
+- The filename of any handoff file written to memory/handoffs/ before this compaction (the pre-compact hook writes ISO-timestamped handoffs into that subdirectory; rolling cap of 5)
 
 **Must not preserve (discard or one-line note only):**
 - Full file contents — the file still exists on disk; the path is sufficient

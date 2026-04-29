@@ -82,6 +82,14 @@
                         "command": "bash $HOME/.claude/hooks/ensure-repo-hooks.sh"
                     }
                 ]
+            },
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash $HOME/.claude/hooks/load-global-memory.sh"
+                    }
+                ]
             }
         ],
         "PostToolUse": [
