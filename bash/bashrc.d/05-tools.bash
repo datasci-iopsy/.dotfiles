@@ -43,5 +43,3 @@ claude() {
 	fi
 	command claude "$@"
 }
-
-alias claude-yolo='claude --dangerously-skip-permissions'

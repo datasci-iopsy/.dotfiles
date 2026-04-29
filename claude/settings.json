@@ -167,6 +167,6 @@
     },
     "effortLevel": "high",
     "awaySummaryEnabled": true,
-    "skipDangerousModePermissionPrompt": true,
+    "skipDangerousModePermissionPrompt": false,
     "autoCompactEnabled": false
 }
