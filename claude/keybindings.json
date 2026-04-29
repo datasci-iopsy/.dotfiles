@@ -6,7 +6,8 @@
             "context": "Chat",
             "bindings": {
                 "shift+enter": "chat:newline",
-                "alt+enter": "chat:newline"
+                "alt+enter": "chat:newline",
+                "ctrl+enter": "chat:modelPicker"
             }
         }
     ]
