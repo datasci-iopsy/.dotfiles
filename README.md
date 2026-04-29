@@ -129,7 +129,7 @@ A standalone POSIX bash script. When you put `~/.dotfiles/bin` ahead of the syst
 
 Otherwise, pass-through: the wrapper exec's the real `claude` with all args, unchanged.
 
-**Verification.** `bash tests/bin-claude.sh` runs 13 deterministic assertions covering shebang/executable, bash and zsh PATH resolution, pass-through behavior, batch detection, resolver collision (wrapper skips non-executable `claude` earlier in PATH), and `install.sh` output shape.
+**Verification.** `bash tests/bin-claude.sh` runs 12 deterministic assertions (13 when zsh is present) covering shebang/executable, bash and zsh PATH resolution, pass-through behavior, batch detection, resolver collision (wrapper skips non-executable `claude` earlier in PATH), and `install.sh` output shape.
 
 ---
 
