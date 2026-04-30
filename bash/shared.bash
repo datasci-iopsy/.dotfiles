@@ -4,16 +4,30 @@
 # Edit here to keep both machines in sync via git pull.
 # Machine-local overrides (GCP project, API keys) stay in ~/.bashrc.local.
 
-# ── macOS ─────────────────────────────────────────────────────────────────────
-export BASH_SILENCE_DEPRECATION_WARNING=1
-export LSCOLORS=GxFxCxDxBxegedabagaced
+# ── OS detection ──────────────────────────────────────────────────────────────
+_os="$(uname -s)"
+
+# ── macOS-only ────────────────────────────────────────────────────────────────
+if [ "$_os" = "Darwin" ]; then
+    export BASH_SILENCE_DEPRECATION_WARNING=1
+    export LSCOLORS=GxFxCxDxBxegedabagaced
+fi
 
 # ── Homebrew ──────────────────────────────────────────────────────────────────
-if [ -x /opt/homebrew/bin/brew ]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-elif [ -x /usr/local/bin/brew ]; then
-    eval "$(/usr/local/bin/brew shellenv)"
-fi
+# macOS: Apple Silicon (/opt/homebrew) and Intel (/usr/local)
+# Linux: Linuxbrew user install (~/.linuxbrew) and system install (/home/linuxbrew/.linuxbrew)
+for _brew_prefix in \
+    /opt/homebrew \
+    /usr/local \
+    "$HOME/.linuxbrew" \
+    /home/linuxbrew/.linuxbrew
+do
+    if [ -x "${_brew_prefix}/bin/brew" ]; then
+        eval "$("${_brew_prefix}/bin/brew" shellenv)"
+        break
+    fi
+done
+unset _brew_prefix
 
 # ── pyenv ─────────────────────────────────────────────────────────────────────
 if [ -d "$HOME/.pyenv" ]; then
@@ -50,11 +64,19 @@ git_branch() {
 }
 PROMPT_COMMAND=git_branch
 
-# ── ls aliases (macOS BSD flags) ──────────────────────────────────────────────
-alias ls='ls -GFhp'
-alias ll='ls -lAGFhp'
-alias lt='ls -lAGFhtr'
-alias l.='ls -dAGFhp .* 2>/dev/null'
+# ── ls aliases ────────────────────────────────────────────────────────────────
+if [ "$_os" = "Darwin" ]; then
+    alias ls='ls -GFhp'
+    alias ll='ls -lAGFhp'
+    alias lt='ls -lAGFhtr'
+    alias l.='ls -dAGFhp .* 2>/dev/null'
+else
+    alias ls='ls --color=auto -Fhp'
+    alias ll='ls --color=auto -lAFhp'
+    alias lt='ls --color=auto -lAFhtr'
+    alias l.='ls --color=auto -dAFhp .* 2>/dev/null'
+fi
+unset _os
 
 # ── Navigation ────────────────────────────────────────────────────────────────
 alias ~='cd ~'
