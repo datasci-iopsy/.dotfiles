@@ -1,0 +1,13 @@
+# ~/.bashrc.local — machine-local shell config, not tracked in git.
+#
+# Sourced at the end of ~/.bashrc so these definitions take precedence.
+# Copy this file to ~/.bashrc.local and edit as needed.
+# Add the following line to the bottom of your ~/.bashrc if not already present:
+#
+#   [ -f ~/.bashrc.local ] && source ~/.bashrc.local
+
+# ── Claude aliases ────────────────────────────────────────────────────────────
+
+# Skip interactive tool-use prompts. PreToolUse hooks (GCP blocklist, etc.)
+# still fire — only the "do you want to allow X?" interactive prompts are skipped.
+alias claude-fast='claude --permission-mode bypassPermissions'
