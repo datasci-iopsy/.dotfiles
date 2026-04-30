@@ -19,11 +19,21 @@ Choose the tool based on the file extension. Do not improvise.
 |---|---|---|
 | `.pdf` | Read tool with `pages` parameter | Report only |
 | `.md` / `.txt` / `.tex` | Read tool directly | Edit mode |
-| `.docx` | `Bash: textutil -convert txt -stdout "$FILE"` | Report only |
+| `.docx` | detect: `textutil` (macOS) or `soffice` (Linux) | Report only |
 
-For `.docx`: run `textutil -convert txt -stdout /path/to/file.docx` and read the stdout. Do not write a temp file unless the output exceeds what fits in a single Bash response.
+**For `.docx` — detect the available converter before proceeding:**
 
-Do not use `python-docx`, `pandoc`, or any other tool unless textutil fails. If textutil fails, report the error to the user rather than improvising.
+1. `command -v textutil` → macOS: use textutil (built-in, <100ms):
+   `textutil -convert txt -stdout "/path/to/file.docx"` — output goes to stdout, no temp file needed.
+2. `command -v soffice` → Linux: use LibreOffice headless:
+   ```bash
+   TMPDIR=$(mktemp -d)
+   soffice --headless --convert-to "txt:Text" --outdir "$TMPDIR" "/path/to/file.docx"
+   # Output: $TMPDIR/<filename-stem>.txt — read with Read tool, then rm -rf "$TMPDIR"
+   ```
+3. Neither found: stop. Report: "No `.docx` converter available. Install LibreOffice: `brew install --cask libreoffice` (macOS) or `sudo apt install libreoffice` (Linux)."
+
+Do not use `python-docx`, `pandoc`, or any other tool.
 
 **Edit mode:** Apply silent fixes directly to the file using the Edit tool. Leave changes unstaged for the user to review. Also produce a copyedit report and a style sheet file.
 

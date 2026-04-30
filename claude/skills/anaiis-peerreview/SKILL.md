@@ -17,11 +17,21 @@ Choose the tool based on the file extension. Do not improvise.
 |---|---|---|
 | `.pdf` | Read tool with `pages` parameter | Native; no subprocess. Read in ≤15-page chunks: `pages: "1-15"`, then `"16-30"`, etc. |
 | `.md` / `.txt` / `.tex` | Read tool directly | Plain text; zero overhead. Use `offset`/`limit` for files over 200 lines. |
-| `.docx` | `Bash: textutil -convert txt -stdout "$FILE"` | macOS native; no Python, no dependencies. Pipe output directly into review. |
+| `.docx` | detect: `textutil` (macOS) or `soffice` (Linux) | See detection rules below |
 
-For `.docx`: run `textutil -convert txt -stdout /path/to/file.docx` and read the stdout. Do not write a temp file unless the output exceeds what fits in a single Bash response.
+**For `.docx` — detect the available converter before proceeding:**
 
-Do not use `python-docx`, `pandoc`, or any other tool unless textutil fails (file is corrupt or password-protected). If textutil fails, report the error to the user rather than improvising.
+1. `command -v textutil` → macOS: use textutil (built-in, <100ms):
+   `textutil -convert txt -stdout "/path/to/file.docx"` — output goes to stdout, no temp file needed.
+2. `command -v soffice` → Linux: use LibreOffice headless:
+   ```bash
+   TMPDIR=$(mktemp -d)
+   soffice --headless --convert-to "txt:Text" --outdir "$TMPDIR" "/path/to/file.docx"
+   # Output: $TMPDIR/<filename-stem>.txt — read with Read tool, then rm -rf "$TMPDIR"
+   ```
+3. Neither found: stop. Report: "No `.docx` converter available. Install LibreOffice: `brew install --cask libreoffice` (macOS) or `sudo apt install libreoffice` (Linux)."
+
+Do not use `python-docx`, `pandoc`, or any other tool.
 
 ---
 
@@ -232,6 +242,10 @@ Rate each dimension: **Strong** / **Adequate** / **Needs Strengthening** — wit
 **Overall Impression**
 
 [2–3 sentences on the manuscript's contribution, its readiness, and where effort should be focused. No accept/reject recommendation — the reviewer evaluates; the editor decides (APA). Frame constructively: "Addressing X and Y would substantially strengthen this manuscript for submission."]
+
+---
+
+**File output:** Write the completed review to `peer-review-<manuscript-stem>-<YYYY-MM-DD>.md` in the current working directory. Print only the file path to terminal, not the full review.
 
 ---
 
