@@ -19,7 +19,7 @@ Run a non-destructive environment health check before starting work.
 4. **Git state**: `git status --short` -- any uncommitted changes or untracked files?
 5. **Pre-commit hook** (if inside a git repo):
    - Check whether `.git/hooks/pre-commit` exists and contains `r-lint-staged.sh`.
-   - If R files exist in the repo (`*.R` or `*.r`) but the hook is missing or does not include R lint, flag it and offer to run: `bash ~/.claude/install-repo-hooks.sh`
+   - If R files exist in the repo (`*.R` or `*.r`) but the hook is missing or does not include R lint, flag it and offer to run: `bash ~/.claude/scripts/install-repo-hooks.sh`
 6. **Auth tokens** (if applicable):
    - `gh auth status` -- GitHub CLI authenticated?
    - `gcloud auth list` -- GCP auth valid? (only if project uses GCP)
@@ -33,7 +33,7 @@ Report as a checklist. Flag issues with recommended fixes. Example:
 - [ ] **poetry.lock inconsistent** -- run `poetry lock` to resolve
 - [x] R renv: all packages in sync
 - [x] Git: clean working tree
-- [ ] **R lint pre-commit hook missing** -- run `bash ~/.claude/install-repo-hooks.sh`
+- [ ] **R lint pre-commit hook missing** -- run `bash ~/.claude/scripts/install-repo-hooks.sh`
 - [x] GitHub CLI: authenticated as user
 - [n/a] GCP: not applicable to this project
 
