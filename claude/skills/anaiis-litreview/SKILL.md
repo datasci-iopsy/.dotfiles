@@ -151,6 +151,8 @@ Per `rules/citations.md`: web results are supplementary. Present them separately
 | ... | ... | ... | https://doi.org/... | Relevance note |
 ```
 
+**File output:** Write the completed synthesis to `litreview-<topic-slug>-<YYYY-MM-DD>.md` in the current working directory. Print only the file path to terminal, not the full synthesis.
+
 ## Hard limits
 
 - Never read more than 5 PDFs in a single pass
