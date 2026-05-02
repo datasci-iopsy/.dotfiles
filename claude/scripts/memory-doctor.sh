@@ -128,8 +128,8 @@ echo "## E. load-global-memory hook"
 TEST_SID="doctor-$$-$RANDOM"
 MARKER="/tmp/claude-session-${TEST_SID}.global-loaded"
 rm -f "$MARKER"
-INPUT_E=$(printf '{"session_id":"%s","cwd":"%s","hook_event_name":"UserPromptSubmit","prompt":"x"}' \
-    "$TEST_SID" "$PWD")
+INPUT_E=$(jq -n --arg sid "$TEST_SID" --arg cwd "$PWD" \
+    '{"session_id":$sid,"cwd":$cwd,"hook_event_name":"UserPromptSubmit","prompt":"x"}')
 OUT1=$(printf '%s' "$INPUT_E" | bash "$LOAD_HOOK" 2>/dev/null || true)
 OUT2=$(printf '%s' "$INPUT_E" | bash "$LOAD_HOOK" 2>/dev/null || true)
 rm -f "$MARKER"
