@@ -175,7 +175,7 @@ See `claude/skills/README.md` for trigger conditions.
 | Command | What it does |
 |---|---|
 | `/seed-project` | Init per-project memory files from templates |
-| `/install-hooks` | Add R lint and Python ruff pre-commit hooks to a repo |
+| `/install-hooks` | Install pre-commit lint dispatcher (R, Python, Shell, JSON) in a repo |
 | `/coderabbit-fix` | Process CodeRabbit findings through triage; stages first, deferred second |
 
 ### Rules
@@ -187,7 +187,7 @@ See `claude/skills/README.md` for trigger conditions.
 | `rules/code-style.md` | Writing style, shell formatting, no emojis |
 | `rules/git.md` | Branch naming, commit discipline, author identity |
 | `rules/r-conventions.md` | Vectorization, lapply/vapply, lintr style |
-| `rules/python.md` | pyenv, ruff, uv |
+| `rules/python.md` | uv, direnv, ruff |
 | `rules/session.md` | Token efficiency, context thresholds, output preferences |
 | `rules/duckdb.md` | DuckDB query discipline (purpose-based patterns) |
 | `rules/citations.md` | Citation integrity (corpus-only sources, no fabrication) |
@@ -210,7 +210,8 @@ Configured in `claude/settings.json`. Scripts in `claude/hooks/`.
 | `UserPromptSubmit` | — | `maintenance-check.sh` | Weekly plan-file check; monthly session-storage check; weekly repo-hooks audit |
 | `UserPromptSubmit` | — | `coderabbit-triage.sh` | CodeRabbit triage rubric injection for individual pastes |
 | `UserPromptSubmit` | — | `ensure-repo-hooks.sh` | Silently installs pre-commit dispatcher in current repo if missing |
-| `PostToolUse` | `Edit\|Write` | `post-edit-lint.sh` | `.py` ruff; `.sh` shellcheck; `.sql` sqlfmt; `.R` lintr; `.json` jq --indent 4 |
+| `UserPromptSubmit` | — | `load-global-memory.sh` | Loads global memory tier (`~/.claude/memory/`) once per session |
+| `PostToolUse` | `Edit\|Write` | `post-edit-lint.sh` | `.py` ruff; `.sh` shfmt (auto-fix) + shellcheck; `.sql` sqlfmt; `.R` lintr; `.json` jq --indent 4 |
 | `PreToolUse` | `Write\|Edit` | inline | Allow `*.env.example`/`*.env.template`; block `*.lock`, `*.env`, `*credentials*`, `*secret*`, `*.pem`, `*.key` |
 | `PreToolUse` | `Bash` | inline | Block destructive `bq rm`, `gcloud delete*`, `uv cache clean`/`pip uninstall` |
 | `PreToolUse` | `Bash` | `prefer-jq.sh` | Warns when Python is used for JSON instead of jq |
@@ -223,10 +224,11 @@ Hook latency on this machine (measured 2026-04-29): aggregate UserPromptSubmit c
 
 ---
 
-## R / SQL / Python style enforcement
+## Shell / R / SQL / Python style enforcement
 
 | Language | Edit-time | Commit-time | Bypass |
 |---|---|---|---|
+| **Shell** | `post-edit-lint.sh` auto-applies `shfmt -w -i 0 -bn -ci` | `shfmt-lint-staged.sh` blocks | `SKIP_SHFMT=1 git commit …` |
 | **R** | `post-edit-lint.sh` runs `lintr` and reports | `r-lint-staged.sh` blocks if violations | `SKIP_R_LINT=1 git commit …` |
 | **SQL** | `post-edit-lint.sh` auto-applies `sqlfmt` (line_length=120, jinja-aware) | not enforced | n/a (auto-fix only) |
 | **Python** | `post-edit-lint.sh` runs `ruff check` (reported) + `ruff format` (auto-applied) | `ruff-lint-staged.sh` blocks | `SKIP_RUFF=1 git commit …` |
@@ -242,7 +244,7 @@ Per-project memory at `~/.claude/projects/<encoded-path>/memory/`. Each project 
 
 Templates for new memory entries live in `claude/memory-templates/` (committed to this repo). Actual memory directories are per-machine and not tracked.
 
-A future Phase-9 update introduces a `~/.claude/memory/` global tier so user-level facts (identity, cross-project preferences) live once instead of duplicating across project memory dirs. See `council-transcript-2026-04-29.md` Phase 9.
+A global tier at `~/.claude/memory/` holds cross-project user-level facts (identity, preferences), loaded once per session by `load-global-memory.sh`. Templates live in `claude/memory-templates/global/`.
 
 ---
 
@@ -266,10 +268,9 @@ These override `git config`. The `attribution.commit` field (currently `""`) con
 `install.sh` only handles symlinks. The following must be installed per machine:
 
 ```bash
-brew install gh jq shellcheck pyenv ruff uv
+brew install gh jq shellcheck shfmt ruff uv
 uv tool install shandy-sqlfmt
-~/.pyenv/versions/3.12.12/bin/python -m pipx install graphifyy \
-    --python ~/.pyenv/versions/3.12.12/bin/python
+uv tool install graphify
 ```
 
 R packages (global, not renv-managed):
