@@ -17,7 +17,7 @@ set -eu
 INPUT=$(cat)
 
 if ! command -v jq >/dev/null 2>&1; then
-    exit 0
+	exit 0
 fi
 
 GLOBAL_DIR="$HOME/.claude/memory"
@@ -52,16 +52,16 @@ $(cat "$INDEX")
 
 # Pull in any markdown link targets from the index, e.g. [Title](filename.md)
 while IFS= read -r f; do
-    target="$GLOBAL_DIR/$f"
-    # Guard against path traversal: target must resolve under GLOBAL_DIR.
-    case "$target" in "$GLOBAL_DIR/"*) ;; *) continue ;; esac
-    if [ -f "$target" ] && [ "$f" != "MEMORY.md" ]; then
-        PAYLOAD="$PAYLOAD
+	target="$GLOBAL_DIR/$f"
+	# Guard against path traversal: target must resolve under GLOBAL_DIR.
+	case "$target" in "$GLOBAL_DIR/"*) ;; *) continue ;; esac
+	if [ -f "$target" ] && [ "$f" != "MEMORY.md" ]; then
+		PAYLOAD="$PAYLOAD
 ### $f
 
 $(cat "$target")
 "
-    fi
+	fi
 done < <(grep -oE '\([a-zA-Z0-9_.]+\.md\)' "$INDEX" | tr -d '()' | sort -u)
 
 # Emit as a systemMessage so Claude has the content as context for this turn.

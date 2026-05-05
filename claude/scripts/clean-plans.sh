@@ -32,9 +32,9 @@ echo ""
 echo "${#OLD_FILES[@]} plan file(s) older than $DAYS days."
 read -rp "Delete? [y/N] " confirm
 case "$confirm" in
-[yY])
-	rm "${OLD_FILES[@]}"
-	echo "Deleted ${#OLD_FILES[@]} file(s)."
-	;;
-*) echo "Aborted." ;;
+	[yY])
+		rm "${OLD_FILES[@]}"
+		echo "Deleted ${#OLD_FILES[@]} file(s)."
+		;;
+	*) echo "Aborted." ;;
 esac

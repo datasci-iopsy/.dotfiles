@@ -23,8 +23,8 @@ set -euo pipefail
 INPUT=$(cat)
 
 if ! command -v jq &>/dev/null; then
-    echo "[pre-compact] jq not found — skipping handoff" >&2
-    exit 0
+	echo "[pre-compact] jq not found — skipping handoff" >&2
+	exit 0
 fi
 
 TRIGGER=$(echo "$INPUT" | jq -r '.trigger // "unknown"')
@@ -33,8 +33,8 @@ CWD=$(echo "$INPUT" | jq -r '.cwd // ""')
 TRANSCRIPT_PATH=$(echo "$INPUT" | jq -r '.transcript_path // ""')
 
 if [ -z "$CWD" ]; then
-    echo "[pre-compact] cwd missing from hook input — skipping" >&2
-    exit 0
+	echo "[pre-compact] cwd missing from hook input — skipping" >&2
+	exit 0
 fi
 
 # ── Derive paths ──────────────────────────────────────────────────────────────
@@ -53,19 +53,19 @@ mkdir -p "$HANDOFFS_DIR"
 # ── Locate transcript JSONL ───────────────────────────────────────────────────
 # Prefer transcript_path from hook input (provided by Claude Code directly)
 if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
-    TRANSCRIPT="$TRANSCRIPT_PATH"
+	TRANSCRIPT="$TRANSCRIPT_PATH"
 else
-    # Fallback: derive from session ID, then most recent JSONL
-    TRANSCRIPT="$HOME/.claude/projects/$PROJECT_KEY/${SESSION_ID}.jsonl"
-    if [ ! -f "$TRANSCRIPT" ]; then
-        TRANSCRIPT=$(ls -t "$HOME/.claude/projects/$PROJECT_KEY/"*.jsonl 2>/dev/null | head -1 || echo "")
-    fi
+	# Fallback: derive from session ID, then most recent JSONL
+	TRANSCRIPT="$HOME/.claude/projects/$PROJECT_KEY/${SESSION_ID}.jsonl"
+	if [ ! -f "$TRANSCRIPT" ]; then
+		TRANSCRIPT=$(ls -t "$HOME/.claude/projects/$PROJECT_KEY/"*.jsonl 2>/dev/null | head -1 || echo "")
+	fi
 fi
 
 # ── Extract file activity from transcript ─────────────────────────────────────
 FILE_READS=""
 if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
-    FILE_READS=$(jq -r '
+	FILE_READS=$(jq -r '
         # Assistant messages contain tool_use blocks
         select(.type == "assistant") |
         (.message.content // .content // [])[] |
@@ -73,14 +73,14 @@ if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
         select(.name | test("^(Read|Write|Edit)$")) |
         "\(.name): \(.input.file_path // .input.path // "")"
     ' "$TRANSCRIPT" 2>/dev/null \
-        | grep -v ': $' \
-        | sort -u \
-        | head -60 \
-        || echo "")
+		| grep -v ': $' \
+		| sort -u \
+		| head -60 \
+		|| echo "")
 fi
 
 if [ -z "$FILE_READS" ]; then
-    FILE_READS="(no file reads detected in transcript)"
+	FILE_READS="(no file reads detected in transcript)"
 fi
 
 # ── Git state ─────────────────────────────────────────────────────────────────
@@ -90,16 +90,16 @@ RECENT_COMMITS="(not a git repo)"
 CHANGED_FILES="(no changes)"
 
 if git -C "$CWD" rev-parse --git-dir &>/dev/null 2>&1; then
-    BRANCH=$(git -C "$CWD" branch --show-current 2>/dev/null || echo "detached HEAD")
-    GIT_STATUS=$(git -C "$CWD" status --short 2>/dev/null || echo "")
-    RECENT_COMMITS=$(git -C "$CWD" log --oneline -5 2>/dev/null || echo "(no commits)")
-    CHANGED_FILES=$(git -C "$CWD" diff --stat HEAD 2>/dev/null || echo "(no staged changes)")
-    [ -z "$GIT_STATUS" ] && GIT_STATUS="(clean)"
-    [ -z "$CHANGED_FILES" ] && CHANGED_FILES="(no staged changes)"
+	BRANCH=$(git -C "$CWD" branch --show-current 2>/dev/null || echo "detached HEAD")
+	GIT_STATUS=$(git -C "$CWD" status --short 2>/dev/null || echo "")
+	RECENT_COMMITS=$(git -C "$CWD" log --oneline -5 2>/dev/null || echo "(no commits)")
+	CHANGED_FILES=$(git -C "$CWD" diff --stat HEAD 2>/dev/null || echo "(no staged changes)")
+	[ -z "$GIT_STATUS" ] && GIT_STATUS="(clean)"
+	[ -z "$CHANGED_FILES" ] && CHANGED_FILES="(no staged changes)"
 fi
 
 # ── Write handoff file ────────────────────────────────────────────────────────
-cat > "$HANDOFF_FILE" << HANDOFF
+cat >"$HANDOFF_FILE" <<HANDOFF
 ---
 name: Session handoff ${FILE_TS}
 description: Pre-compact snapshot — ${TRIGGER} trigger, branch ${BRANCH}
@@ -145,18 +145,18 @@ HANDOFF
 CAP=5
 COUNT=$(find "$HANDOFFS_DIR" -maxdepth 1 -name 'handoff_*.md' -type f 2>/dev/null | wc -l | tr -d ' ')
 if [ "${COUNT:-0}" -gt "$CAP" ]; then
-    OVERFLOW=$((COUNT - CAP))
-    # ls -1t lists newest first; tail -$OVERFLOW gives us the oldest to delete.
-    ls -1t "$HANDOFFS_DIR"/handoff_*.md 2>/dev/null | tail -n "$OVERFLOW" | while IFS= read -r old; do
-        rm -f "$old"
-    done
+	OVERFLOW=$((COUNT - CAP))
+	# ls -1t lists newest first; tail -$OVERFLOW gives us the oldest to delete.
+	ls -1t "$HANDOFFS_DIR"/handoff_*.md 2>/dev/null | tail -n "$OVERFLOW" | while IFS= read -r old; do
+		rm -f "$old"
+	done
 fi
 
 # Migration: if any flat handoff_*.md files still live in $MEMORY_DIR (from
 # the pre-Phase-9 layout), move them into handoffs/ now. Idempotent.
 for legacy in "$MEMORY_DIR"/handoff_*.md; do
-    [ -f "$legacy" ] || continue
-    mv "$legacy" "$HANDOFFS_DIR/"
+	[ -f "$legacy" ] || continue
+	mv "$legacy" "$HANDOFFS_DIR/"
 done
 
 echo "[pre-compact] handoff written: $HANDOFF_FILE" >&2

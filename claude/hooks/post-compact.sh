@@ -13,13 +13,13 @@ set -euo pipefail
 INPUT=$(cat)
 
 if ! command -v jq &>/dev/null; then
-    exit 0
+	exit 0
 fi
 
 CWD=$(echo "$INPUT" | jq -r '.cwd // ""')
 
 if [ -z "$CWD" ]; then
-    exit 0
+	exit 0
 fi
 
 PROJECT_KEY=$(echo "$CWD" | tr '/.' '-')
@@ -31,11 +31,11 @@ HANDOFFS_DIR="$MEMORY_DIR/handoffs"
 # been touched by an updated pre-compact.
 LATEST_HANDOFF=$(ls -t "$HANDOFFS_DIR"/handoff_*.md 2>/dev/null | head -1 || echo "")
 if [ -z "$LATEST_HANDOFF" ]; then
-    LATEST_HANDOFF=$(ls -t "$MEMORY_DIR"/handoff_*.md 2>/dev/null | head -1 || echo "")
+	LATEST_HANDOFF=$(ls -t "$MEMORY_DIR"/handoff_*.md 2>/dev/null | head -1 || echo "")
 fi
 
 if [ -z "$LATEST_HANDOFF" ] || [ ! -f "$LATEST_HANDOFF" ]; then
-    exit 0
+	exit 0
 fi
 
 HANDOFF_CONTENT=$(cat "$LATEST_HANDOFF")
@@ -43,6 +43,6 @@ HANDOFF_CONTENT=$(cat "$LATEST_HANDOFF")
 # Output systemMessage — injected into the compacted context so Claude
 # immediately knows what was in scope before compaction.
 jq -n --arg content "$HANDOFF_CONTENT" \
-    '{"systemMessage": ("## Restored from pre-compact handoff\n\nThe following context was captured immediately before compaction. Use it to avoid re-reading files and to restore task continuity.\n\n" + $content)}'
+	'{"systemMessage": ("## Restored from pre-compact handoff\n\nThe following context was captured immediately before compaction. Use it to avoid re-reading files and to restore task continuity.\n\n" + $content)}'
 
 exit 0

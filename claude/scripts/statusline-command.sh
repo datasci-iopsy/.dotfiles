@@ -190,14 +190,14 @@ fi
 
 # Repo cost
 repo_cost=""
-if [ -f "$REPO_CACHE" ] &&
-	[ $((_now - $(file_mtime "$REPO_CACHE"))) -lt $CACHE_TTL ] 2>/dev/null; then
+if [ -f "$REPO_CACHE" ] \
+	&& [ $((_now - $(file_mtime "$REPO_CACHE"))) -lt $CACHE_TTL ] 2>/dev/null; then
 	repo_cost=$(cat "$REPO_CACHE" 2>/dev/null)
 else
 	_proj_dir="$HOME/.claude/projects/$_slug"
 	if [ -d "$_proj_dir" ]; then
-		repo_cost=$(cat "$_proj_dir"/*.jsonl 2>/dev/null |
-			jq -rs "$_COST_JQ" 2>/dev/null)
+		repo_cost=$(cat "$_proj_dir"/*.jsonl 2>/dev/null \
+			| jq -rs "$_COST_JQ" 2>/dev/null)
 		printf '%s' "${repo_cost:-0}" >"$REPO_CACHE"
 		printf '%s' "$_slug" >"$SLUG_FILE"
 	fi
@@ -205,12 +205,12 @@ fi
 
 # Total cost across all projects
 all_cost=""
-if [ -f "$ALL_CACHE" ] &&
-	[ $((_now - $(file_mtime "$ALL_CACHE"))) -lt $CACHE_TTL ] 2>/dev/null; then
+if [ -f "$ALL_CACHE" ] \
+	&& [ $((_now - $(file_mtime "$ALL_CACHE"))) -lt $CACHE_TTL ] 2>/dev/null; then
 	all_cost=$(cat "$ALL_CACHE" 2>/dev/null)
 else
-	all_cost=$(cat "$HOME/.claude/projects"/*/*.jsonl 2>/dev/null |
-		jq -rs "$_COST_JQ" 2>/dev/null)
+	all_cost=$(cat "$HOME/.claude/projects"/*/*.jsonl 2>/dev/null \
+		| jq -rs "$_COST_JQ" 2>/dev/null)
 	printf '%s' "${all_cost:-0}" >"$ALL_CACHE"
 fi
 
@@ -229,10 +229,10 @@ fi
 # Effort
 if [ -n "$effort" ]; then
 	case "$effort" in
-	low) line1+=("$(printf "${b_grn}${dim}↓low${rs}")") ;;
-	medium) line1+=("$(printf "${b_yel}${dim}▶med${rs}")") ;;
-	high) line1+=("$(printf "${b_red}${bd}↑high${rs}")") ;;
-	*) line1+=("$(printf "${dim}%s${rs}" "$effort")") ;;
+		low) line1+=("$(printf "${b_grn}${dim}↓low${rs}")") ;;
+		medium) line1+=("$(printf "${b_yel}${dim}▶med${rs}")") ;;
+		high) line1+=("$(printf "${b_red}${bd}↑high${rs}")") ;;
+		*) line1+=("$(printf "${dim}%s${rs}" "$effort")") ;;
 	esac
 fi
 
@@ -294,8 +294,8 @@ if [ "${ctx_pct:-0}" -gt 0 ] 2>/dev/null; then
 fi
 
 # Token counts
-if [ "${in_tok:-0}" -gt 0 ] 2>/dev/null &&
-	[ "${out_tok:-0}" -gt 0 ] 2>/dev/null; then
+if [ "${in_tok:-0}" -gt 0 ] 2>/dev/null \
+	&& [ "${out_tok:-0}" -gt 0 ] 2>/dev/null; then
 	line2+=("$(printf "${dim}tok:${rs}${b_grn}${dim}%s${b_wht}${dim}+%s${rs}" \
 		"$(fmt_k "$in_tok")" "$(fmt_k "$out_tok")")")
 fi
