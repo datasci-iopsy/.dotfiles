@@ -22,7 +22,7 @@ Rules (`~/.claude/rules/`) constrain Claude's behavior across all tasks. Skills 
 | `rules/code-style.md` | Writing style, shell formatting, no emojis |
 | `rules/git.md` | Branch naming, commit discipline, staging |
 | `rules/r-conventions.md` | Vectorization, lapply/vapply, lintr style |
-| `rules/python.md` | pyenv, ruff, uv |
+| `rules/python.md` | uv, direnv, ruff |
 | `rules/session.md` | Token efficiency, context thresholds, output prefs, compaction |
 | `rules/core.md` | Simplicity, root causes, workflow, sub-agents |
 | `rules/duckdb.md` | DuckDB query discipline: purpose-based patterns, no re-querying context |
