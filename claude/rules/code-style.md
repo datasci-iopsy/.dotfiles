@@ -15,6 +15,9 @@
 - In dbt projects, sqlfmt config lives in `[tool.sqlfmt]` in `pyproject.toml`. Write SQL that passes sqlfmt without modification.
 - The post-edit hook auto-applies sqlfmt when found in the project venv (`.venv/bin/sqlfmt`) or on PATH.
 
-## Shell command formatting
-- Multi-line commands with backslash continuations are fine for readability. Only split at argument or flag boundaries, never inside a quoted string. A backslash continuation must appear outside of all quotes — breaking a quoted string across lines causes bash to treat the continuation lines as separate commands. When in doubt, print the command on a single line.
+## Shell formatting
+- All shell scripts (`.sh`) are formatted with `shfmt`. Style: tabs for indentation (`-i 0`), binary ops at line start (`-bn`), indented switch cases (`-ci`).
+- `shfmt -w -i 0 -bn -ci` is applied automatically by the post-edit hook on every save and enforced at pre-commit via `shfmt-lint-staged.sh`. Write shell that passes `shfmt` without modification.
+- `shellcheck` runs after `shfmt` for linting. Both are informational in the post-edit hook; `shfmt` is blocking at pre-commit (`SKIP_SHFMT=1 git commit` to bypass).
+- Multi-line commands with backslash continuations are fine for readability. Only split at argument or flag boundaries, never inside a quoted string. A backslash continuation must appear outside of all quotes.
 - In code blocks containing shell commands, do not indent the command itself. Keep it flush-left within the block.
