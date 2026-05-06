@@ -7,7 +7,10 @@
 #    Stages findings to ~/.claude/coderabbit-staged-batch.md, then exits 2 (blocked).
 #    User runs /coderabbit-fix which reads the staged batch and runs full triage.
 #
-# 2. Individual finding paste ("Verify each finding..." or coderabbit-instructions):
+# 2. Individual finding paste: detects any of:
+#    - "Verify each finding against" (with or without "the current code")
+#    - "Inline comments:" / "Outside diff comments:" / "Nitpick comments:" headers
+#    - coderabbit-instructions sentinel
 #    Injects triage rubric into context (exits 0). Claude rates and routes inline.
 #
 # Rating 3 deferred findings accumulate in ~/.claude/coderabbit-deferred.md
@@ -43,13 +46,13 @@ session_id=$(echo "$input" | "$JQ" -r '.session_id // empty')
 
 # ------------------------------------------------------------------
 # Detect "fix all" batch: CodeRabbit's batch button produces a prompt
-# with multiple findings, each preceded by "Verify each finding against
-# the current code". A single paste has exactly one such line; a batch
-# has two or more. Count occurrences — two or more means it is a batch.
+# with multiple findings, each preceded by a "Verify each finding against"
+# line. A single paste has exactly one such line; a batch has two or more.
+# Count occurrences — two or more means it is a batch.
 # ------------------------------------------------------------------
-verify_count=$(echo "$prompt" | grep -c 'Verify each finding against the current code' 2>/dev/null || echo 0)
+verify_count=$(echo "$prompt" | grep -c 'Verify each finding against' 2>/dev/null || true)
 if [[ "$verify_count" -ge 2 ]]; then
-	finding_count=$(echo "$prompt" | grep -c 'Verify each finding against the current code' || true)
+	finding_count=$(echo "$prompt" | grep -c 'Verify each finding against' || true)
 	{
 		echo "# CodeRabbit Staged Batch"
 		echo "# Staged: $(date '+%Y-%m-%d %H:%M')"
@@ -70,7 +73,7 @@ fi
 # ------------------------------------------------------------------
 # Individual finding paste or file-based format: inject triage rubric
 # ------------------------------------------------------------------
-if echo "$prompt" | grep -qE 'Verify each finding against the current code|coderabbit-instructions'; then
+if echo "$prompt" | grep -qE 'Verify each finding against|coderabbit-instructions|Inline comments:|Outside diff comments:|Nitpick comments:'; then
 	# On first CodeRabbit prompt in this session, reset the deferred file and session log
 	stamp="$STAMP_DIR/.coderabbit-session"
 	last_session=$(cat "$stamp" 2>/dev/null || echo "")

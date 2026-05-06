@@ -191,7 +191,7 @@
         "type": "command",
         "command": "bash $HOME/.claude/scripts/statusline-command.sh"
     },
-    "effortLevel": "medium",
+    "effortLevel": "high",
     "awaySummaryEnabled": true,
     "skipDangerousModePermissionPrompt": true,
     "autoCompactEnabled": true

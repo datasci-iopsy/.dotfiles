@@ -1,4 +1,4 @@
-Process CodeRabbit findings through the triage rubric, fix real defects, and commit by logical group.
+Auto-triggers on CodeRabbit inline review pastes ("Verify each finding against", "Inline comments:", "Outside diff comments:", "Nitpick comments:"). Use /coderabbit-fix explicitly for staged-batch processing. Process findings through the triage rubric, fix rated-4/5 defects, commit by logical group.
 
 ## Arguments
 
