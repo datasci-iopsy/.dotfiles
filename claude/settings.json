@@ -51,7 +51,10 @@
             "Bash(direnv:*)",
             "Bash(uv:*)",
             "Bash(uvr:*)",
-            "Bash(ALLOW_LOCK_COMMIT=1 git commit*)"
+            "Bash(ALLOW_LOCK_COMMIT=1 git commit*)",
+            "Bash(tmux capture-pane *)",
+            "Bash(dbt parse *)",
+            "Bash(dbt compile *)"
         ],
         "deny": [
             "Bash(rm -r*)",
@@ -191,7 +194,7 @@
         "type": "command",
         "command": "bash $HOME/.claude/scripts/statusline-command.sh"
     },
-    "effortLevel": "high",
+    "effortLevel": "medium",
     "awaySummaryEnabled": true,
     "skipDangerousModePermissionPrompt": true,
     "autoCompactEnabled": true
